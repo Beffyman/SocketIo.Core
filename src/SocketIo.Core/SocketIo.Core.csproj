@@ -3,6 +3,11 @@
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <DefineConstants>TRACE</DefineConstants>
+    <Description>Dot Net Core looking implementation of Socket.IO.  This is NOT Socket.IO and it is merely a Udp/Tcp socket abstraction that looks like it.</Description>
+    <PackageTags>C# Socket.IO Core</PackageTags>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>Beffyman</Authors>
+    <Company />
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
