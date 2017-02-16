@@ -4,6 +4,6 @@
     <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SocketIo.Core\SocketIo.Core.csproj" />
+    <PackageReference Include="SocketIo.Core" Version="1.1.0" />
   </ItemGroup>
 </Project>

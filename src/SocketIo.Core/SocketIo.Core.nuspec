@@ -1,0 +1,25 @@
+<package>
+	<metadata>
+		<id>SocketIo.Core</id>
+		<version>1.1.0</version>
+		<title>SocketIo.Core</title>
+		<authors>Beffyman</authors>
+		<owners>Beffyman</owners>
+		<licenseUrl>https://github.com/Beffyman/SocketIo.Core/blob/master/LICENSE</licenseUrl>
+		<projectUrl>https://github.com/Beffyman/SocketIo.Core</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>Abstraction of TCP/UDP sockets that writes like Socket.IO</description>
+		<copyright>Copyright 2017</copyright>
+		<dependencies>
+			<dependency id="Newtonsoft.Json" version="9.0.1" />
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="bin\Release\net462\SocketIo.Core.dll" target="lib\net462\" />
+		<file src="bin\Release\net462\SocketIo.Core.pdb" target="lib\net462\" />
+		<file src="bin\Release\netcoreapp1.0\SocketIo.Core.dll" target="lib\netcoreapp1.0\" />
+		<file src="bin\Release\netcoreapp1.0\SocketIo.Core.pdb" target="lib\netcoreapp1.0\" />
+		<file src="bin\Release\netstandard1.6\SocketIo.Core.dll" target="lib\netstandard1.6\" />
+		<file src="bin\Release\netstandard1.6\SocketIo.Core.pdb" target="lib\netstandard1.6\" />
+	</files>
+</package>

@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TargetFrameworks>netcoreapp1.0;net462;net452;netstandard1.6;</TargetFrameworks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <DefineConstants>TRACE</DefineConstants>
     <Description>Dot Net Core looking implementation of Socket.IO.  This is NOT Socket.IO and it is merely a Udp/Tcp socket abstraction that looks like it.</Description>
     <PackageTags>C# Socket.IO Core</PackageTags>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Authors>Beffyman</Authors>
     <Company />
   </PropertyGroup>
