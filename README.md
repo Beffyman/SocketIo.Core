@@ -1,5 +1,6 @@
 # Socket.Io.Core
-* NuGet Package: [![SocketIo.Core](https://img.shields.io/nuget/v/SocketIo.Core.svg?maxAge=2592000)](https://www.nuget.org/packages/SocketIo.Core/)
+[![SocketIo.Core](https://img.shields.io/nuget/v/SocketIo.Core.svg?maxAge=2592000)](https://www.nuget.org/packages/SocketIo.Core/)
+
 Abstraction of TCP/UDP sockets that writes like Socket.IO
 
 ## Example
