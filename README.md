@@ -37,5 +37,3 @@ while (!hit1 || !hit2)
 socket.Close();
 
 ```
-
-[Nuget](https://www.nuget.org/packages/SocketIo.Core)
