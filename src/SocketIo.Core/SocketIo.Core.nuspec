@@ -1,25 +1,47 @@
 <package>
 	<metadata>
 		<id>SocketIo.Core</id>
-		<version>1.1.0</version>
+		<version>1.2.0</version>
 		<title>SocketIo.Core</title>
 		<authors>Beffyman</authors>
 		<owners>Beffyman</owners>
 		<licenseUrl>https://github.com/Beffyman/SocketIo.Core/blob/master/LICENSE</licenseUrl>
 		<projectUrl>https://github.com/Beffyman/SocketIo.Core</projectUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<description>Abstraction of TCP/UDP sockets that writes like Socket.IO</description>
+		<description>
+			Abstraction of TCP/UDP sockets that writes like Socket.IO
+		</description>
 		<copyright>Copyright 2017</copyright>
 		<dependencies>
-			<dependency id="Newtonsoft.Json" version="9.0.1" />
+
+			<group targetFramework="net45">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
+			<group targetFramework="net451">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
+			<group targetFramework="net452">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
+			<group targetFramework="net46">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
+			<group targetFramework="net461">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
+			<group targetFramework="net462">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
+			<group targetFramework="netcoreapp1.0">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
+			<group targetFramework="netstandard1.6">
+				<dependency id="Newtonsoft.Json" version="9.0.1" />
+			</group>
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="bin\Release\net462\SocketIo.Core.dll" target="lib\net462\" />
-		<file src="bin\Release\net462\SocketIo.Core.pdb" target="lib\net462\" />
-		<file src="bin\Release\netcoreapp1.0\SocketIo.Core.dll" target="lib\netcoreapp1.0\" />
-		<file src="bin\Release\netcoreapp1.0\SocketIo.Core.pdb" target="lib\netcoreapp1.0\" />
-		<file src="bin\Release\netstandard1.6\SocketIo.Core.dll" target="lib\netstandard1.6\" />
-		<file src="bin\Release\netstandard1.6\SocketIo.Core.pdb" target="lib\netstandard1.6\" />
+		<file src="bin\Release\**\*Core.dll" target="lib" />
+		<file src="bin\Release\**\*Core.pdb" target="lib" />
 	</files>
 </package>

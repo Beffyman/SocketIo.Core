@@ -1,6 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.0;net462;net452;netstandard1.6;</TargetFrameworks>
+    <TargetFrameworks>
+		netstandard1.6;
+		netcoreapp1.0;
+		net462;
+		net461;
+		net46;
+		net452;
+		net451;
+		net45;
+	</TargetFrameworks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <DefineConstants>TRACE</DefineConstants>
     <Description>Dot Net Core looking implementation of Socket.IO.  This is NOT Socket.IO and it is merely a Udp/Tcp socket abstraction that looks like it.</Description>
