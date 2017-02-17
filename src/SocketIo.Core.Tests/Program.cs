@@ -16,7 +16,7 @@ class Program
 		socket.On("connect", () =>
 		{
 			hit1 = true;
-			socket.On<int>("test", (package) =>
+			socket.On("test", (int package) =>
 			{
 				if(package == 5)
 				{
