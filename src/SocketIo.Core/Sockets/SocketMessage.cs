@@ -11,6 +11,8 @@ namespace SocketIo
 		public string Event { get; set; }
 		public object Content { get; set; }
 
+		public Guid Id = Guid.NewGuid();
+
 		public ushort CallbackPort { get; set; }
 	}
 }

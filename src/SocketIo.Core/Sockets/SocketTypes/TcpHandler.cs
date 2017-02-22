@@ -47,22 +47,18 @@ namespace SocketIo.SocketTypes
 
 				try
 				{
-
-
-					byte[] data = new byte[1024];
+					byte[] data = new byte[4096];
 					client = await Listener.AcceptTcpClientAsync();
 					if (!_listening) { break; }
 					var stream = client.GetStream();
 					stream.Read(data, 0, data.Length);
-					await Task.Factory.StartNew(() => ParentSocket.HandleMessage(data, client.Client.RemoteEndPoint as IPEndPoint));
+					await Task.Factory.StartNew(() => ParentSocket.HandleMessage(data, (client.Client.RemoteEndPoint as IPEndPoint).Address));
 				}
 				catch (Exception ex)
 				{
 					_listening = false;
 					Listener.Stop();
-#if DEBUG
-					throw ex;
-#endif
+					Console.WriteLine(ex.ToString());
 				}
 			}
 			Listener.Stop();
@@ -88,9 +84,7 @@ namespace SocketIo.SocketTypes
 			}
 			catch (Exception ex)
 			{
-#if DEBUG
-				throw ex;
-#endif
+				Console.WriteLine(ex.ToString());
 			}
 		}
 
@@ -98,6 +92,7 @@ namespace SocketIo.SocketTypes
 		{
 			_listening = false;
 			Listener.Stop();
+			Listener.Server.Dispose();
 			this.NetworkTimeout = 0;
 			this.ReceivePort = 0;
 			this.SendPort = 0;

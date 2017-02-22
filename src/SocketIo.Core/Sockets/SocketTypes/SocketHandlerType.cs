@@ -7,6 +7,6 @@ namespace SocketIo.SocketTypes
     public enum SocketHandlerType
     {
 		Udp,
-		Tcp
+		Tcp,
     }
 }

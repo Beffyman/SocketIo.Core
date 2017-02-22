@@ -84,7 +84,7 @@ namespace SocketIo.SocketTypes
 		{
 			if (message != null && message.Buffer != null && message.Buffer.Length > 0)
 			{
-				ParentSocket.HandleMessage(message.Buffer, message.RemoteEndPoint);
+				ParentSocket.HandleMessage(message.Buffer, message.RemoteEndPoint.Address);
 			}
 
 		}

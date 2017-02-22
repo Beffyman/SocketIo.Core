@@ -139,14 +139,14 @@ namespace SocketIo
 		}
 
 
-		internal void HandleMessage(byte[] message, IPEndPoint endpoint)
+		internal void HandleMessage(byte[] message, IPAddress endpoint)
 		{
 			SocketMessage msg = message.Deserialize<SocketMessage>();
-
+			IPEndPoint ipPort = new IPEndPoint(endpoint, msg.CallbackPort);
 			if (Emitters.ContainsKey(msg.Event))
 			{
 				CurrentEmitter = Emitters[msg.Event];
-				CurrentEmitter.Invoke(msg.Content,endpoint);
+				CurrentEmitter.Invoke(msg, ipPort);
 				CurrentEmitter = null;
 			}
 

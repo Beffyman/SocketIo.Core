@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Net;
+using System.Collections.Concurrent;
 
 namespace SocketIo
 {
@@ -10,18 +11,23 @@ namespace SocketIo
 	{
 		public readonly string Event;
 		public readonly Guid Id;
-		public IPEndPoint CurrentSender { get; protected set; }
+		public ConcurrentDictionary<Guid,IPEndPoint> SenderList { get; set; }
+		public IPEndPoint CurrentSender { get; set; }
+
 
 		public BaseEmitter(string @event)
 		{
+			SenderList = new ConcurrentDictionary<Guid, IPEndPoint>();
 			Id = Guid.NewGuid();
 			Event = @event;
 		}
 
-		public void Invoke(object arg, IPEndPoint sender)
+		internal void Invoke(SocketMessage arg, IPEndPoint sender)
 		{
 			CurrentSender = sender;
-			Invoke(arg);
+			SenderList.TryAdd(arg.Id, sender);
+			Invoke(arg.Content);
+			SenderList.TryRemove(arg.Id, out sender);
 			CurrentSender = null;
 		}
 		public abstract void Invoke(object arg);
