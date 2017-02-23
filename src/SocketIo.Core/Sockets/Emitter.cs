@@ -7,15 +7,18 @@ using System.Collections.Concurrent;
 
 namespace SocketIo
 {
+	/// <summary>
+	/// Class all emitter types inherit from
+	/// </summary>
 	public abstract class BaseEmitter
 	{
-		public readonly string Event;
-		public readonly Guid Id;
-		public ConcurrentDictionary<Guid,IPEndPoint> SenderList { get; set; }
-		public IPEndPoint CurrentSender { get; set; }
+		internal readonly string Event;
+		internal readonly Guid Id;
+		internal ConcurrentDictionary<Guid,IPEndPoint> SenderList { get; set; }
+		internal IPEndPoint CurrentSender { get; set; }
 
 
-		public BaseEmitter(string @event)
+		internal BaseEmitter(string @event)
 		{
 			SenderList = new ConcurrentDictionary<Guid, IPEndPoint>();
 			Id = Guid.NewGuid();
@@ -30,37 +33,43 @@ namespace SocketIo
 			SenderList.TryRemove(arg.Id, out sender);
 			CurrentSender = null;
 		}
-		public abstract void Invoke(object arg);
+		internal abstract void Invoke(object arg);
 	}
 
-
+	/// <summary>
+	/// Parameterless Emitter
+	/// </summary>
 	public sealed class Emitter : BaseEmitter
 	{
-				
-		public Action Body { get; set; }
 
-		public Emitter(string @event, Action body) : base(@event)
+		internal Action Body { get; set; }
+
+		internal Emitter(string @event, Action body) : base(@event)
 		{
 			Body = body;
 		}
 
-		public override void Invoke(object arg)
+		internal override void Invoke(object arg)
 		{
 			Body();
 		}
 	}
 
+	/// <summary>
+	/// Emitter with 1 Parameter
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
 	public sealed class Emitter<T> : BaseEmitter
 	{
 		
-		public Action<T> Body { get; set; }
+		internal Action<T> Body { get; set; }
 
-		public Emitter(string @event, Action<T> body) : base(@event)
+		internal Emitter(string @event, Action<T> body) : base(@event)
 		{
 			Body = body;
 		}
 
-		public override void Invoke(object arg)
+		internal override void Invoke(object arg)
 		{			
 			Body((T)Convert.ChangeType(arg, typeof(T)));
 		}

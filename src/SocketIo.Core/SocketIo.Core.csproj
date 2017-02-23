@@ -1,24 +1,48 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>
-		netstandard1.6;
-		netcoreapp1.0;
-		net462;
-		net461;
-		net46;
-		net452;
-		net451;
-		net45;
-	</TargetFrameworks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <DefineConstants>TRACE</DefineConstants>
-    <Description>Dot Net Core looking implementation of Socket.IO.  This is NOT Socket.IO and it is merely a Udp/Tcp socket abstraction that looks like it.</Description>
-    <PackageTags>C# Socket.IO Core</PackageTags>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Authors>Beffyman</Authors>
-    <Company />
-  </PropertyGroup>
-  <ItemGroup>
-	  <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFrameworks>
+			netstandard1.6;
+			netcoreapp1.0;
+			net462;
+			net461;
+			net46;
+			net452;
+			net451;
+			net45;
+		</TargetFrameworks>
+		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+		<DefineConstants>TRACE</DefineConstants>
+		<Description>Dot Net Core looking implementation of Socket.IO.  This is NOT Socket.IO and it is merely a Udp/Tcp socket abstraction that looks like it.</Description>
+		<PackageTags>C# Socket.IO Core</PackageTags>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Authors>Beffyman</Authors>
+		<Company />
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.6|AnyCPU'">
+		<DocumentationFile>bin\Release\netstandard1.6\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp1.0|AnyCPU'">
+		<DocumentationFile>bin\Release\netcoreapp1.0\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
+		<DocumentationFile>bin\Release\net462\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+		<DocumentationFile>bin\Release\net461\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net46|AnyCPU'">
+		<DocumentationFile>bin\Release\net46\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net452|AnyCPU'">
+		<DocumentationFile>bin\Release\net452\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net451|AnyCPU'">
+		<DocumentationFile>bin\Release\net451\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+		<DocumentationFile>bin\Release\net45\SocketIo.Core.xml</DocumentationFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+	</ItemGroup>
 </Project>

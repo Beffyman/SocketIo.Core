@@ -11,70 +11,151 @@ using SocketIo.SocketTypes;
 
 namespace SocketIo
 {
-	public class SocketIo
+	/// <summary>
+	/// Abstraction of a UDP/TCP client that writes like Socket.IO
+	/// </summary>
+	public sealed class SocketIo
 	{
-		protected ConcurrentDictionary<string, BaseEmitter> Emitters { get; private set; } = new ConcurrentDictionary<string, BaseEmitter>();
+		private ConcurrentDictionary<string, BaseEmitter> Emitters { get; set; } = new ConcurrentDictionary<string, BaseEmitter>();
 		//protected ConcurrentBag<BaseEmitter> Emitters { get; private set; } = new ConcurrentBag<BaseEmitter>();
-		
-		protected ushort SendPort { get; set; }
-		protected ushort ReceivePort { get; set; }
-		protected int Timeout { get; set; }
-		protected string ConnectedIP { get; set; }
+
+		private ushort SendPort { get; set; }
+		private ushort ReceivePort { get; set; }
+		private int Timeout { get; set; }
+		private string ConnectedIP { get; set; }
 
 		private BaseNetworkProtocol Handler { get; set; }
 
 		private BaseEmitter CurrentEmitter;
 
-		/// <summary>
-		/// Socket that sends/receives from the endpoint
-		/// </summary>
-		/// <param name="ip"></param>
-		/// <param name="port"></param>
-		public SocketIo(ushort sendPort, ushort receivePort,int timeout, SocketHandlerType socketType)
-		{
-			SendPort = sendPort;
-			ReceivePort = receivePort;
-			Timeout = timeout;
+		//ushort receivePort
 
-			if (Handler == null)
+		private SocketIo() { }
+
+
+		internal static SocketIo CreateSender(string ip, ushort sendPort, int timeout, SocketHandlerType socketType, string initialEmit = null)
+		{
+			SocketIo socket = new SocketIo
+			{
+				ConnectedIP = ip,
+				SendPort = sendPort,
+				Timeout = timeout,
+			};
+
+			if (socket.Handler == null)
 			{
 				switch (socketType)
 				{
 					case SocketHandlerType.Tcp:
-						Handler = new TCPHandler(ReceivePort, SendPort, Timeout, this);
+						socket.Handler = new TCPHandler(socket.ReceivePort, socket.SendPort, socket.Timeout, socket);
 						break;
 					case SocketHandlerType.Udp:
-						Handler = new UDPHandler(ReceivePort, SendPort, Timeout, this);
+						socket.Handler = new UDPHandler(socket.ReceivePort, socket.SendPort, socket.Timeout, socket);
 						break;
 				}
 			}
 			else
 			{
-				Handler.Setup(ReceivePort, SendPort, Timeout);
+				socket.Handler.Setup(socket.ReceivePort, socket.SendPort, socket.Timeout);
 			}
-		}
-
-		public void Connect(string ip, string initialEmit = null)
-		{
-			ConnectedIP = ip;
-
-			Handler.Listen(new IPEndPoint(IPAddress.Parse(ip), ReceivePort));
 
 			if (!string.IsNullOrEmpty(initialEmit))
 			{
-				Emit(initialEmit, new IPEndPoint(IPAddress.Parse(ip), SendPort));
+				socket.Emit(initialEmit, new IPEndPoint(IPAddress.Parse(socket.ConnectedIP), socket.SendPort));
+			}
+
+			return socket;
+		}
+
+		internal static SocketIo CreateListener(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
+		{
+			SocketIo socket = new SocketIo
+			{
+				ConnectedIP = ip,
+				ReceivePort = recievePort,
+				Timeout = timeout,
+			};
+
+			if (socket.Handler == null)
+			{
+				switch (socketType)
+				{
+					case SocketHandlerType.Tcp:
+						socket.Handler = new TCPHandler(socket.ReceivePort, socket.SendPort, socket.Timeout, socket);
+						break;
+					case SocketHandlerType.Udp:
+						socket.Handler = new UDPHandler(socket.ReceivePort, socket.SendPort, socket.Timeout, socket);
+						break;
+				}
+			}
+			else
+			{
+				socket.Handler.Setup(socket.ReceivePort, socket.SendPort, socket.Timeout);
+			}
+
+			socket.Connect(recievePort);
+
+			return socket;
+		}
+
+		internal void Connect(ushort receivePort)
+		{
+			if (receivePort == 0)
+			{
+				throw new Exception($"ReceivePort cannot be 0, to listen for messages setup the listener.");
+			}
+
+			if(ReceivePort != 0)
+			{
+				throw new Exception($"You cannot add another sender to this socket. Please restart the socket to change settings.");
+			}
+
+			ReceivePort = receivePort;
+			Handler.Setup(ReceivePort, SendPort, Timeout);
+			Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+		}
+
+		internal void AddSender(ushort sendPort, string initialEmit = null)
+		{
+			if (sendPort == 0)
+			{
+				throw new Exception($"SendPort cannot be 0, to emit messages setup the sender.");
+			}
+
+			if (SendPort != 0)
+			{
+				throw new Exception($"You cannot add another listener to this socket. Please restart the socket to change settings.");
+			}
+
+			SendPort = sendPort;
+			Handler.Setup(ReceivePort, SendPort, Timeout);
+			if (!string.IsNullOrEmpty(initialEmit))
+			{
+				Emit(initialEmit, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
 			}
 		}
 
-
-
+		/// <summary>
+		/// Register an event with an action
+		/// </summary>
+		/// <param name="event"></param>
+		/// <param name="body"></param>
+		/// <returns></returns>
 		public Emitter On(string @event, Action body)
 		{
 			Emitter e = new Emitter(@event, body);
-			Emitters.TryAdd(e.Event,e);
-			
+			Emitters.TryAdd(e.Event, e);
+
 			return e;
 		}
+
+		/// <summary>
+		/// Register an event with an action with a paramter
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="event"></param>
+		/// <param name="body"></param>
+		/// <returns></returns>
 		public Emitter<T> On<T>(string @event, Action<T> body)
 		{
 			Emitter<T> e = new Emitter<T>(@event, body);
@@ -83,6 +164,10 @@ namespace SocketIo
 			return e;
 		}
 
+		/// <summary>
+		/// Sends a empty message to the connected Listener
+		/// </summary>
+		/// <param name="event"></param>
 		public void Emit(string @event)
 		{
 			SocketMessage sm = new SocketMessage
@@ -94,6 +179,12 @@ namespace SocketIo
 
 			Emit(sm);
 		}
+		/// <summary>
+		/// Sends a message to the connected Listener
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="event"></param>
+		/// <param name="message"></param>
 		public void Emit<T>(string @event, T message)
 		{
 			SocketMessage sm = new SocketMessage
@@ -106,6 +197,11 @@ namespace SocketIo
 			Emit(sm);
 		}
 
+		/// <summary>
+		/// Sends a empty message to the specified enpoint
+		/// </summary>
+		/// <param name="event"></param>
+		/// <param name="endpoint"></param>
 		public void Emit(string @event, IPEndPoint endpoint)
 		{
 			SocketMessage sm = new SocketMessage
@@ -118,8 +214,31 @@ namespace SocketIo
 			Handler.Send(sm, endpoint);
 		}
 
+		/// <summary>
+		/// Sends a message to the specified enpoint
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="event"></param>
+		/// <param name="message"></param>
+		/// <param name="endpoint"></param>
+		public void Emit<T>(string @event,T message, IPEndPoint endpoint)
+		{
+			SocketMessage sm = new SocketMessage
+			{
+				Content = message,
+				Event = @event,
+				CallbackPort = ReceivePort
+			};
+
+			Handler.Send(sm, endpoint);
+		}
+
 		private void Emit(SocketMessage message)
 		{
+			if(SendPort == 0)
+			{
+				throw new Exception($"SendPort cannot be 0, to emit messages setup the sender.");
+			}
 
 			if (CurrentEmitter != null)
 			{
@@ -127,17 +246,53 @@ namespace SocketIo
 			}
 			else
 			{
-				Handler.Send(message, new IPEndPoint(IPAddress.Parse(ConnectedIP),SendPort));
+				Handler.Send(message, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
 			}
 		}
 
-
+		/// <summary>
+		/// Closes the socket and all emitters.
+		/// </summary>
 		public void Close()
 		{
 			Emitters.Clear();
 			Handler.Close();
 		}
 
+		internal void Reset(string ip, ushort? sendPort,ushort? recievePort, int? timeout, SocketHandlerType? socketType)
+		{
+			ConnectedIP = ip ?? ConnectedIP;
+			SendPort = sendPort ?? SendPort;
+			ReceivePort = recievePort ?? ReceivePort;
+			Timeout = timeout ?? Timeout;
+
+			if(socketType != null)
+			{
+				if(Handler != null)
+				{
+					try
+					{
+						Handler.Close();
+					}
+					catch { }
+				}
+
+				switch (socketType)
+				{
+					case SocketHandlerType.Tcp:
+						Handler = new TCPHandler(ReceivePort, SendPort, Timeout, this);
+						break;
+					case SocketHandlerType.Udp:
+						Handler = new UDPHandler(ReceivePort, SendPort, Timeout, this);
+						break;
+				}
+			}
+
+			if(ReceivePort != 0)
+			{
+				Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+			}
+		}
 
 		internal void HandleMessage(byte[] message, IPAddress endpoint)
 		{
@@ -149,13 +304,6 @@ namespace SocketIo
 				CurrentEmitter.Invoke(msg, ipPort);
 				CurrentEmitter = null;
 			}
-
-
-
-
-
-
-
 		}
 	}
 
