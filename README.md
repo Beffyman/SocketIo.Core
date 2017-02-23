@@ -11,29 +11,35 @@ bool hit1 = false;
 bool hit2 = false;
 
 
-var socket = Io.Connect("127.0.0.1", 4333, 4333, SocketHandlerType.Udp);
+var socket = Io.Create("127.0.0.1", 4533, 4533, SocketHandlerType.Udp);
 
 socket.On("connect", () =>
 {
 	hit1 = true;
-	socket.On<int>("test", (package) =>
+	socket.On("test", (int package) =>
 	{
-		if(package == 5)
+		if (package == 5)
 		{
 			hit2 = true;
 		}
 	});
 
-	socket.Emit("test",5);
+	socket.Emit("test", 5);
 
 });
 
 socket.Emit("connect");
 
-while (!hit1 || !hit2)
+int timer = 0;
+int timeout = 5000;
+while ((!hit1 || !hit2)
+	&& timer < timeout)
 {
 	Thread.Sleep(100);
+	timer += 100;
 }
 socket.Close();
+
+Assert.IsTrue(hit1 && hit2);
 
 ```
