@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace SocketIo.SocketTypes
 {
-	internal class TCPHandler : BaseNetworkProtocol
+	internal sealed class TCPHandler : BaseNetworkProtocol
 	{
 		public TCPHandler(ushort receivePort, ushort sendPort, int timeout, SocketIo parentSocket)
-		  : base(receivePort, sendPort, timeout,parentSocket)
+		  : base(receivePort, sendPort, timeout, parentSocket)
 		{
 
 		}
@@ -39,11 +39,11 @@ namespace SocketIo.SocketTypes
 			}
 
 			_listening = true;
-			TcpClient client;//Store outside so we need to reallocate less memory 
+			TcpClient client;//Store outside so we need to reallocate less memory
 			Listener.Start();
 			while (_listening)
 			{
-				//ExtendedConsole.Output($"Reading TCP port {ReceivePort}. . ."); 
+				//ExtendedConsole.Output($"Reading TCP port {ReceivePort}. . .");
 
 				try
 				{
@@ -52,7 +52,7 @@ namespace SocketIo.SocketTypes
 					if (!_listening) { break; }
 					var stream = client.GetStream();
 					stream.Read(data, 0, data.Length);
-					await Task.Factory.StartNew(() => ParentSocket.HandleMessage(data, (client.Client.RemoteEndPoint as IPEndPoint).Address));
+					await Task.Run(() => ParentSocket.HandleMessage(data, (client.Client.RemoteEndPoint as IPEndPoint).Address));
 				}
 				catch (Exception ex)
 				{
@@ -71,7 +71,7 @@ namespace SocketIo.SocketTypes
 			try
 			{
 				msg.CallbackPort = ReceivePort;
-				byte[] data = msg.Serialize();
+				byte[] data = ParentSocket.Serializer.Serialize(msg);
 				using (var CurrentClient = new TcpClient())
 				{
 					using (CurrentClient.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))

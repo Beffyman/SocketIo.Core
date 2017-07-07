@@ -1,8 +1,5 @@
-﻿using SocketIo.SocketTypes;
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
+﻿using SocketIo.Core.Serializers;
+using SocketIo.SocketTypes;
 
 namespace SocketIo
 {
@@ -16,6 +13,7 @@ namespace SocketIo
 		/// <summary>
 		/// Restarts the socket with the parameters provided, if null, it defaults to what is already set. If the socket has a listener setup, it will restart as well.
 		/// </summary>
+		/// <typeparam name="T">The type of serializer used.</typeparam>
 		/// <param name="socket"></param>
 		/// <param name="ip"></param>
 		/// <param name="sendPort"></param>
@@ -23,10 +21,47 @@ namespace SocketIo
 		/// <param name="type"></param>
 		/// <param name="timeout"></param>
 		/// <returns></returns>
-		public static SocketIo Restart(this SocketIo socket, string ip=null, ushort? sendPort=null, ushort? receivePort=null, SocketHandlerType? type=null, int timeout = DefaultTimeout)
+		public static SocketIo Restart<T>(this SocketIo socket, string ip = null, ushort? sendPort = null, ushort? receivePort = null, SocketHandlerType? type = null, int timeout = DefaultTimeout)
+			where T : ISerializer, new()
 		{
 			socket.Close();
 			socket.Reset(ip, sendPort, receivePort, timeout, type);
+			return socket;
+		}
+
+		/// <summary>
+		/// Restarts the socket with the parameters provided, if null, it defaults to what is already set. If the socket has a listener setup, it will restart as well.
+		/// </summary>
+		/// <param name="socket"></param>
+		/// <param name="ip"></param>
+		/// <param name="sendPort"></param>
+		/// <param name="receivePort"></param>
+		/// <param name="type"></param>
+		/// <param name="timeout"></param>
+		/// <returns></returns>
+		public static SocketIo Restart(this SocketIo socket, string ip = null, ushort? sendPort = null, ushort? receivePort = null, SocketHandlerType? type = null, int timeout = DefaultTimeout)
+		{
+			socket.Close();
+			socket.Reset(ip, sendPort, receivePort, timeout, type);
+			return socket;
+		}
+
+		/// <summary>
+		/// Creates a socket that will send and receive messages
+		/// </summary>
+		/// <typeparam name="T">The type of serializer used.</typeparam>
+		/// <param name="ip"></param>
+		/// <param name="sendPort"></param>
+		/// <param name="receivePort"></param>
+		/// <param name="type"></param>
+		/// <param name="timeout"></param>
+		/// <param name="initialEmit"></param>
+		/// <returns></returns>
+		public static SocketIo Create<T>(string ip, ushort sendPort, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
+			where T : ISerializer, new()
+		{
+			SocketIo socket = SocketIo.CreateSender<T>(ip, sendPort, timeout, type, initialEmit);
+			socket.AddListener(receivePort);
 			return socket;
 		}
 
@@ -42,7 +77,7 @@ namespace SocketIo
 		/// <returns></returns>
 		public static SocketIo Create(string ip, ushort sendPort, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
 		{
-			SocketIo socket = SocketIo.CreateSender(ip, sendPort, timeout, type, initialEmit);
+			SocketIo socket = SocketIo.CreateSender<JsonSerializer>(ip, sendPort, timeout, type, initialEmit);
 			socket.AddListener(receivePort);
 			return socket;
 		}
@@ -56,9 +91,27 @@ namespace SocketIo
 		/// <param name="timeout"></param>
 		/// <param name="initialEmit"></param>
 		/// <returns></returns>
-		public static SocketIo CreateSender(string ip, ushort sendPort,SocketHandlerType type,int timeout= DefaultTimeout, string initialEmit=null)
+		public static SocketIo CreateSender<T>(string ip, ushort sendPort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
+			where T : ISerializer, new()
 		{
-			SocketIo socket = SocketIo.CreateSender(ip, sendPort, timeout, type, initialEmit);
+			SocketIo socket = SocketIo.CreateSender<T>(ip, sendPort, timeout, type, initialEmit);
+
+			return socket;
+		}
+
+		/// <summary>
+		/// Creates a socket that will send messages
+		/// </summary>
+		/// <typeparam name="T">The type of serializer used.</typeparam>
+		/// <param name="ip"></param>
+		/// <param name="sendPort"></param>
+		/// <param name="type"></param>
+		/// <param name="timeout"></param>
+		/// <param name="initialEmit"></param>
+		/// <returns></returns>
+		public static SocketIo CreateSender(string ip, ushort sendPort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
+		{
+			SocketIo socket = SocketIo.CreateSender<JsonSerializer>(ip, sendPort, timeout, type, initialEmit);
 
 			return socket;
 		}
@@ -69,7 +122,7 @@ namespace SocketIo
 		/// <param name="socket"></param>
 		/// <param name="receivePort"></param>
 		/// <returns></returns>
-		public static SocketIo AddListener(this SocketIo socket,ushort receivePort)
+		public static SocketIo AddListener(this SocketIo socket, ushort receivePort)
 		{
 			socket.Connect(receivePort);
 			return socket;
@@ -87,6 +140,24 @@ namespace SocketIo
 			socket.AddSender(sendPort, initialEmit);
 			return socket;
 		}
+
+		/// <summary>
+		/// Creates a socket that will receive messages
+		/// </summary>
+		/// <typeparam name="T">The type of serializer used.</typeparam>
+		/// <param name="ip"></param>
+		/// <param name="receivePort"></param>
+		/// <param name="type"></param>
+		/// <param name="timeout"></param>
+		/// <returns></returns>
+		public static SocketIo CreateListener<T>(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
+			where T : ISerializer, new()
+		{
+			SocketIo socket = SocketIo.CreateListener<T>(ip, receivePort, timeout, type);
+
+			return socket;
+		}
+
 		/// <summary>
 		/// Creates a socket that will receive messages
 		/// </summary>
@@ -97,11 +168,9 @@ namespace SocketIo
 		/// <returns></returns>
 		public static SocketIo CreateListener(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
 		{
-			SocketIo socket = SocketIo.CreateListener(ip, receivePort, timeout, type);
+			SocketIo socket = SocketIo.CreateListener<JsonSerializer>(ip, receivePort, timeout, type);
 
 			return socket;
 		}
-
-
 	}
 }

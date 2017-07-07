@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Linq;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using SocketIo.Core.Serializers;
 using SocketIo.SocketTypes;
+using System;
+using System.Collections.Concurrent;
+using System.Net;
 
 namespace SocketIo
 {
@@ -17,7 +12,8 @@ namespace SocketIo
 	public sealed class SocketIo
 	{
 		private ConcurrentDictionary<string, BaseEmitter> Emitters { get; set; } = new ConcurrentDictionary<string, BaseEmitter>();
-		//protected ConcurrentBag<BaseEmitter> Emitters { get; private set; } = new ConcurrentBag<BaseEmitter>();
+
+		internal ISerializer Serializer;
 
 		private ushort SendPort { get; set; }
 		private ushort ReceivePort { get; set; }
@@ -33,7 +29,8 @@ namespace SocketIo
 		private SocketIo() { }
 
 
-		internal static SocketIo CreateSender(string ip, ushort sendPort, int timeout, SocketHandlerType socketType, string initialEmit = null)
+		internal static SocketIo CreateSender<T>(string ip, ushort sendPort, int timeout, SocketHandlerType socketType, string initialEmit = null)
+			where T : ISerializer, new()
 		{
 			SocketIo socket = new SocketIo
 			{
@@ -41,6 +38,8 @@ namespace SocketIo
 				SendPort = sendPort,
 				Timeout = timeout,
 			};
+
+			socket.SetupSerializer<T>();
 
 			if (socket.Handler == null)
 			{
@@ -67,7 +66,8 @@ namespace SocketIo
 			return socket;
 		}
 
-		internal static SocketIo CreateListener(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
+		internal static SocketIo CreateListener<T>(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
+			where T : ISerializer, new()
 		{
 			SocketIo socket = new SocketIo
 			{
@@ -75,6 +75,8 @@ namespace SocketIo
 				ReceivePort = recievePort,
 				Timeout = timeout,
 			};
+
+			socket.SetupSerializer<T>();
 
 			if (socket.Handler == null)
 			{
@@ -105,7 +107,7 @@ namespace SocketIo
 				throw new Exception($"ReceivePort cannot be 0, to listen for messages setup the listener.");
 			}
 
-			if(ReceivePort != 0)
+			if (ReceivePort != 0)
 			{
 				throw new Exception($"You cannot add another sender to this socket. Please restart the socket to change settings.");
 			}
@@ -221,7 +223,7 @@ namespace SocketIo
 		/// <param name="event"></param>
 		/// <param name="message"></param>
 		/// <param name="endpoint"></param>
-		public void Emit<T>(string @event,T message, IPEndPoint endpoint)
+		public void Emit<T>(string @event, T message, IPEndPoint endpoint)
 		{
 			SocketMessage sm = new SocketMessage
 			{
@@ -235,7 +237,7 @@ namespace SocketIo
 
 		private void Emit(SocketMessage message)
 		{
-			if(SendPort == 0)
+			if (SendPort == 0)
 			{
 				throw new Exception($"SendPort cannot be 0, to emit messages setup the sender.");
 			}
@@ -259,16 +261,21 @@ namespace SocketIo
 			Handler.Close();
 		}
 
-		internal void Reset(string ip, ushort? sendPort,ushort? recievePort, int? timeout, SocketHandlerType? socketType)
+		internal void Reset(string ip, ushort? sendPort, ushort? recievePort, int? timeout, SocketHandlerType? socketType)
 		{
 			ConnectedIP = ip ?? ConnectedIP;
 			SendPort = sendPort ?? SendPort;
 			ReceivePort = recievePort ?? ReceivePort;
 			Timeout = timeout ?? Timeout;
 
-			if(socketType != null)
+			if(Serializer == null)
 			{
-				if(Handler != null)
+				SetupSerializer<JsonSerializer>();
+			}
+
+			if (socketType != null)
+			{
+				if (Handler != null)
 				{
 					try
 					{
@@ -288,15 +295,59 @@ namespace SocketIo
 				}
 			}
 
-			if(ReceivePort != 0)
+			if (ReceivePort != 0)
 			{
 				Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
 			}
 		}
 
+		internal void Reset<T>(string ip, ushort? sendPort, ushort? recievePort, int? timeout, SocketHandlerType? socketType)
+			where T : ISerializer, new()
+		{
+			ConnectedIP = ip ?? ConnectedIP;
+			SendPort = sendPort ?? SendPort;
+			ReceivePort = recievePort ?? ReceivePort;
+			Timeout = timeout ?? Timeout;
+
+			SetupSerializer<T>();
+
+			if (socketType != null)
+			{
+				if (Handler != null)
+				{
+					try
+					{
+						Handler.Close();
+					}
+					catch { }
+				}
+
+				switch (socketType)
+				{
+					case SocketHandlerType.Tcp:
+						Handler = new TCPHandler(ReceivePort, SendPort, Timeout, this);
+						break;
+					case SocketHandlerType.Udp:
+						Handler = new UDPHandler(ReceivePort, SendPort, Timeout, this);
+						break;
+				}
+			}
+
+			if (ReceivePort != 0)
+			{
+				Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+			}
+		}
+
+		internal void SetupSerializer<T>()
+			where T : ISerializer, new()
+		{
+			Serializer = Activator.CreateInstance<T>();
+		}
+
 		internal void HandleMessage(byte[] message, IPAddress endpoint)
 		{
-			SocketMessage msg = message.Deserialize<SocketMessage>();
+			SocketMessage msg = Serializer.Deserialize<SocketMessage>(message);
 			IPEndPoint ipPort = new IPEndPoint(endpoint, msg.CallbackPort);
 			if (Emitters.ContainsKey(msg.Event))
 			{

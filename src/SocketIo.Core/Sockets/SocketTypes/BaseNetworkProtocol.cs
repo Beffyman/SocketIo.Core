@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,17 +29,17 @@ namespace SocketIo.SocketTypes
 			SendPort = sendPort;
 		}
 
-		/// <summary> 
-		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task 
-		/// </summary> 
+		/// <summary>
+		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task
+		/// </summary>
 		public abstract void Listen(IPEndPoint ReceiveEndPoint);
 
 
-		/// <summary> 
-		/// Sends the message and doesn't wait for input, that should be handled in Listen 
-		/// </summary> 
-		/// <param name="msg"></param> 
-		/// <param name="endpoint"></param> 
+		/// <summary>
+		/// Sends the message and doesn't wait for input, that should be handled in Listen
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="endpoint"></param>
 		public abstract void Send(SocketMessage msg, IPEndPoint endpoint);
 
 		public abstract void Close();
