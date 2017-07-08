@@ -31,7 +31,9 @@ namespace SocketIo.SocketTypes
 
 
 		private TcpListener Listener { get; set; }
-		public override async void Listen(IPEndPoint ReceiveEndPoint)
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Await.Warning", "CS4014:Await.Warning")]
+		public override async Task ListenAsync(IPEndPoint ReceiveEndPoint)
 		{
 			if (Listener == null)
 			{
@@ -52,7 +54,11 @@ namespace SocketIo.SocketTypes
 					if (!_listening) { break; }
 					var stream = client.GetStream();
 					stream.Read(data, 0, data.Length);
-					await Task.Run(() => ParentSocket.HandleMessage(data, (client.Client.RemoteEndPoint as IPEndPoint).Address));
+					Task.Run(() =>
+					{
+						var endpoint = (client.Client.RemoteEndPoint as IPEndPoint).Address;
+						ParentSocket.HandleMessage(data, endpoint);
+					});
 				}
 				catch (Exception ex)
 				{
@@ -66,7 +72,8 @@ namespace SocketIo.SocketTypes
 		}
 
 
-		public override void Send(SocketMessage msg, IPEndPoint endpoint)
+
+		public override async Task SendAsync(SocketMessage msg, IPEndPoint endpoint)
 		{
 			try
 			{
@@ -76,7 +83,7 @@ namespace SocketIo.SocketTypes
 				{
 					using (CurrentClient.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
 					{
-						CurrentClient.ConnectAsync(endpoint.Address, endpoint.Port).Wait();
+						await CurrentClient.ConnectAsync(endpoint.Address, endpoint.Port);
 						NetworkStream stream = CurrentClient.GetStream();
 						stream.Write(data, 0, data.Length);
 					}

@@ -40,7 +40,7 @@ namespace SocketIo.SocketTypes
 		/// <summary>
 		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task
 		/// </summary>
-		public override async void Listen(IPEndPoint ReceiveEndPoint)
+		public override async Task ListenAsync(IPEndPoint ReceiveEndPoint)
 		{
 			_listening = true;
 			//ExtendedConsole.Output($"Reading UDP port {ReceivePort}. . .");
@@ -91,7 +91,7 @@ namespace SocketIo.SocketTypes
 		/// </summary>
 		/// <param name="msg"></param>
 		/// <param name="endpoint"></param>
-		public override void Send(SocketMessage msg, IPEndPoint endpoint)
+		public override async Task SendAsync(SocketMessage msg, IPEndPoint endpoint)
 		{
 			try
 			{
@@ -101,7 +101,7 @@ namespace SocketIo.SocketTypes
 				{
 					using (CurrentClient.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
 					{
-						CurrentClient.SendAsync(data, data.Length, endpoint).Wait();
+						await CurrentClient.SendAsync(data, data.Length, endpoint);
 					}
 				}
 			}

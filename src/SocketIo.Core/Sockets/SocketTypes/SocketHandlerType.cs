@@ -16,6 +16,6 @@
 		/// <summary>
 		/// Websocket provides full-duplex communication channels over a single TCP connection. ws:// will be pre-appended to the ip provided
 		/// </summary>
-		//WebSocket
+		WebSocket
 	}
 }

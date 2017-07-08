@@ -1,5 +1,6 @@
 ﻿using SocketIo.Core.Serializers;
 using SocketIo.SocketTypes;
+using System.Threading.Tasks;
 
 namespace SocketIo
 {
@@ -21,11 +22,11 @@ namespace SocketIo
 		/// <param name="type"></param>
 		/// <param name="timeout"></param>
 		/// <returns></returns>
-		public static SocketIo Restart<T>(this SocketIo socket, string ip = null, ushort? sendPort = null, ushort? receivePort = null, SocketHandlerType? type = null, int timeout = DefaultTimeout)
+		public static async Task<SocketIo> RestartAsync<T>(this SocketIo socket, string ip = null, ushort? sendPort = null, ushort? receivePort = null, SocketHandlerType? type = null, int timeout = DefaultTimeout)
 			where T : ISerializer, new()
 		{
 			socket.Close();
-			socket.Reset(ip, sendPort, receivePort, timeout, type);
+			await socket.ResetAsync(ip, sendPort, receivePort, timeout, type);
 			return socket;
 		}
 
@@ -39,10 +40,10 @@ namespace SocketIo
 		/// <param name="type"></param>
 		/// <param name="timeout"></param>
 		/// <returns></returns>
-		public static SocketIo Restart(this SocketIo socket, string ip = null, ushort? sendPort = null, ushort? receivePort = null, SocketHandlerType? type = null, int timeout = DefaultTimeout)
+		public static async Task<SocketIo> RestartAsync(this SocketIo socket, string ip = null, ushort? sendPort = null, ushort? receivePort = null, SocketHandlerType? type = null, int timeout = DefaultTimeout)
 		{
 			socket.Close();
-			socket.Reset(ip, sendPort, receivePort, timeout, type);
+			await socket.ResetAsync(ip, sendPort, receivePort, timeout, type);
 			return socket;
 		}
 
@@ -57,11 +58,11 @@ namespace SocketIo
 		/// <param name="timeout"></param>
 		/// <param name="initialEmit"></param>
 		/// <returns></returns>
-		public static SocketIo Create<T>(string ip, ushort sendPort, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
+		public static async Task<SocketIo> CreateAsync<T>(string ip, ushort sendPort, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
 			where T : ISerializer, new()
 		{
-			SocketIo socket = SocketIo.CreateSender<T>(ip, sendPort, timeout, type, initialEmit);
-			socket.AddListener(receivePort);
+			SocketIo socket = await SocketIo.CreateSenderAsync<T>(ip, sendPort, timeout, type, initialEmit);
+			await socket.AddListenerAsync(receivePort);
 			return socket;
 		}
 
@@ -75,10 +76,10 @@ namespace SocketIo
 		/// <param name="timeout"></param>
 		/// <param name="initialEmit"></param>
 		/// <returns></returns>
-		public static SocketIo Create(string ip, ushort sendPort, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
+		public static async Task<SocketIo> CreateAsync(string ip, ushort sendPort, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
 		{
-			SocketIo socket = SocketIo.CreateSender<JsonSerializer>(ip, sendPort, timeout, type, initialEmit);
-			socket.AddListener(receivePort);
+			SocketIo socket = await SocketIo.CreateSenderAsync<JsonSerializer>(ip, sendPort, timeout, type, initialEmit);
+			await socket.AddListenerAsync(receivePort);
 			return socket;
 		}
 
@@ -91,10 +92,10 @@ namespace SocketIo
 		/// <param name="timeout"></param>
 		/// <param name="initialEmit"></param>
 		/// <returns></returns>
-		public static SocketIo CreateSender<T>(string ip, ushort sendPort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
+		public static async Task<SocketIo> CreateSenderAsync<T>(string ip, ushort sendPort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
 			where T : ISerializer, new()
 		{
-			SocketIo socket = SocketIo.CreateSender<T>(ip, sendPort, timeout, type, initialEmit);
+			SocketIo socket = await SocketIo.CreateSenderAsync<T>(ip, sendPort, timeout, type, initialEmit);
 
 			return socket;
 		}
@@ -109,9 +110,9 @@ namespace SocketIo
 		/// <param name="timeout"></param>
 		/// <param name="initialEmit"></param>
 		/// <returns></returns>
-		public static SocketIo CreateSender(string ip, ushort sendPort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
+		public static async Task<SocketIo> CreateSenderAsync(string ip, ushort sendPort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
 		{
-			SocketIo socket = SocketIo.CreateSender<JsonSerializer>(ip, sendPort, timeout, type, initialEmit);
+			SocketIo socket = await SocketIo.CreateSenderAsync<JsonSerializer>(ip, sendPort, timeout, type, initialEmit);
 
 			return socket;
 		}
@@ -122,9 +123,9 @@ namespace SocketIo
 		/// <param name="socket"></param>
 		/// <param name="receivePort"></param>
 		/// <returns></returns>
-		public static SocketIo AddListener(this SocketIo socket, ushort receivePort)
+		public static async Task<SocketIo> AddListenerAsync(this SocketIo socket, ushort receivePort)
 		{
-			socket.Connect(receivePort);
+			await socket.ConnectAsync(receivePort);
 			return socket;
 		}
 
@@ -135,9 +136,9 @@ namespace SocketIo
 		/// <param name="sendPort"></param>
 		/// <param name="initialEmit"></param>
 		/// <returns></returns>
-		public static SocketIo AddSender(this SocketIo socket, ushort sendPort, string initialEmit = null)
+		public static async Task<SocketIo> AddSenderAsync(this SocketIo socket, ushort sendPort, string initialEmit = null)
 		{
-			socket.AddSender(sendPort, initialEmit);
+			await socket.AddSenderAsync(sendPort, initialEmit);
 			return socket;
 		}
 
@@ -150,10 +151,10 @@ namespace SocketIo
 		/// <param name="type"></param>
 		/// <param name="timeout"></param>
 		/// <returns></returns>
-		public static SocketIo CreateListener<T>(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
+		public static async Task<SocketIo> CreateListenerAsync<T>(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
 			where T : ISerializer, new()
 		{
-			SocketIo socket = SocketIo.CreateListener<T>(ip, receivePort, timeout, type);
+			SocketIo socket = await SocketIo.CreateListenerAsync<T>(ip, receivePort, timeout, type);
 
 			return socket;
 		}
@@ -166,9 +167,9 @@ namespace SocketIo
 		/// <param name="type"></param>
 		/// <param name="timeout"></param>
 		/// <returns></returns>
-		public static SocketIo CreateListener(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
+		public static async Task<SocketIo> CreateListenerAsync(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
 		{
-			SocketIo socket = SocketIo.CreateListener<JsonSerializer>(ip, receivePort, timeout, type);
+			SocketIo socket = await SocketIo.CreateListenerAsync<JsonSerializer>(ip, receivePort, timeout, type);
 
 			return socket;
 		}

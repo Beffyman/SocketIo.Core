@@ -3,6 +3,7 @@ using SocketIo.SocketTypes;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace SocketIo
 {
@@ -24,12 +25,10 @@ namespace SocketIo
 
 		private BaseEmitter CurrentEmitter;
 
-		//ushort receivePort
-
 		private SocketIo() { }
 
 
-		internal static SocketIo CreateSender<T>(string ip, ushort sendPort, int timeout, SocketHandlerType socketType, string initialEmit = null)
+		internal static async Task<SocketIo> CreateSenderAsync<T>(string ip, ushort sendPort, int timeout, SocketHandlerType socketType, string initialEmit = null)
 			where T : ISerializer, new()
 		{
 			SocketIo socket = new SocketIo
@@ -60,13 +59,13 @@ namespace SocketIo
 
 			if (!string.IsNullOrEmpty(initialEmit))
 			{
-				socket.Emit(initialEmit, new IPEndPoint(IPAddress.Parse(socket.ConnectedIP), socket.SendPort));
+				await socket.EmitAsync(initialEmit, new IPEndPoint(IPAddress.Parse(socket.ConnectedIP), socket.SendPort));
 			}
 
 			return socket;
 		}
 
-		internal static SocketIo CreateListener<T>(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
+		internal static async Task<SocketIo> CreateListenerAsync<T>(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
 			where T : ISerializer, new()
 		{
 			SocketIo socket = new SocketIo
@@ -95,12 +94,12 @@ namespace SocketIo
 				socket.Handler.Setup(socket.ReceivePort, socket.SendPort, socket.Timeout);
 			}
 
-			socket.Connect(recievePort);
+			await socket.ConnectAsync(recievePort);
 
 			return socket;
 		}
 
-		internal void Connect(ushort receivePort)
+		internal async Task ConnectAsync(ushort receivePort)
 		{
 			if (receivePort == 0)
 			{
@@ -114,10 +113,10 @@ namespace SocketIo
 
 			ReceivePort = receivePort;
 			Handler.Setup(ReceivePort, SendPort, Timeout);
-			Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+			await Handler.ListenAsync(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
 		}
 
-		internal void AddSender(ushort sendPort, string initialEmit = null)
+		internal async Task AddSender(ushort sendPort, string initialEmit = null)
 		{
 			if (sendPort == 0)
 			{
@@ -133,7 +132,7 @@ namespace SocketIo
 			Handler.Setup(ReceivePort, SendPort, Timeout);
 			if (!string.IsNullOrEmpty(initialEmit))
 			{
-				Emit(initialEmit, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
+				await EmitAsync(initialEmit, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
 			}
 		}
 
@@ -165,6 +164,94 @@ namespace SocketIo
 
 			return e;
 		}
+
+		/// <summary>
+		/// Sends a empty message to the connected Listener
+		/// </summary>
+		/// <param name="event"></param>
+		public async Task EmitAsync(string @event)
+		{
+			SocketMessage sm = new SocketMessage
+			{
+				Content = null,
+				Event = @event,
+				CallbackPort = ReceivePort
+			};
+
+			await EmitAsync(sm);
+		}
+		/// <summary>
+		/// Sends a message to the connected Listener
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="event"></param>
+		/// <param name="message"></param>
+		public async Task EmitAsync<T>(string @event, T message)
+		{
+			SocketMessage sm = new SocketMessage
+			{
+				Content = message,
+				Event = @event,
+				CallbackPort = ReceivePort
+			};
+
+			await EmitAsync(sm);
+		}
+
+		/// <summary>
+		/// Sends a empty message to the specified enpoint
+		/// </summary>
+		/// <param name="event"></param>
+		/// <param name="endpoint"></param>
+		public async Task EmitAsync(string @event, IPEndPoint endpoint)
+		{
+			SocketMessage sm = new SocketMessage
+			{
+				Content = null,
+				Event = @event,
+				CallbackPort = ReceivePort
+			};
+
+			await Handler.SendAsync(sm, endpoint);
+		}
+
+		/// <summary>
+		/// Sends a message to the specified enpoint
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="event"></param>
+		/// <param name="message"></param>
+		/// <param name="endpoint"></param>
+		public async Task EmitAsync<T>(string @event, T message, IPEndPoint endpoint)
+		{
+			SocketMessage sm = new SocketMessage
+			{
+				Content = message,
+				Event = @event,
+				CallbackPort = ReceivePort
+			};
+
+			await Handler.SendAsync(sm, endpoint);
+		}
+
+		private async Task EmitAsync(SocketMessage message)
+		{
+			if (SendPort == 0)
+			{
+				throw new Exception($"SendPort cannot be 0, to emit messages setup the sender.");
+			}
+
+			if (CurrentEmitter != null)
+			{
+				await Handler.SendAsync(message, CurrentEmitter.CurrentSender);
+			}
+			else
+			{
+				await Handler.SendAsync(message, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
+			}
+		}
+
+
 
 		/// <summary>
 		/// Sends a empty message to the connected Listener
@@ -213,7 +300,7 @@ namespace SocketIo
 				CallbackPort = ReceivePort
 			};
 
-			Handler.Send(sm, endpoint);
+			Handler.SendAsync(sm, endpoint).Wait();
 		}
 
 		/// <summary>
@@ -232,7 +319,7 @@ namespace SocketIo
 				CallbackPort = ReceivePort
 			};
 
-			Handler.Send(sm, endpoint);
+			Handler.SendAsync(sm, endpoint).Wait();
 		}
 
 		private void Emit(SocketMessage message)
@@ -244,13 +331,16 @@ namespace SocketIo
 
 			if (CurrentEmitter != null)
 			{
-				Handler.Send(message, CurrentEmitter.CurrentSender);
+				Handler.SendAsync(message, CurrentEmitter.CurrentSender).Wait();
 			}
 			else
 			{
-				Handler.Send(message, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
+				Handler.SendAsync(message, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort)).Wait();
 			}
 		}
+
+
+
 
 		/// <summary>
 		/// Closes the socket and all emitters.
@@ -261,7 +351,7 @@ namespace SocketIo
 			Handler.Close();
 		}
 
-		internal void Reset(string ip, ushort? sendPort, ushort? recievePort, int? timeout, SocketHandlerType? socketType)
+		internal async Task ResetAsync(string ip, ushort? sendPort, ushort? recievePort, int? timeout, SocketHandlerType? socketType)
 		{
 			ConnectedIP = ip ?? ConnectedIP;
 			SendPort = sendPort ?? SendPort;
@@ -292,16 +382,19 @@ namespace SocketIo
 					case SocketHandlerType.Udp:
 						Handler = new UDPHandler(ReceivePort, SendPort, Timeout, this);
 						break;
+					case SocketHandlerType.WebSocket:
+						Handler = new WebSocketHandler(ReceivePort, SendPort, Timeout, this);
+						break;
 				}
 			}
 
 			if (ReceivePort != 0)
 			{
-				Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+				await Handler.ListenAsync(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
 			}
 		}
 
-		internal void Reset<T>(string ip, ushort? sendPort, ushort? recievePort, int? timeout, SocketHandlerType? socketType)
+		internal async Task ResetAsync<T>(string ip, ushort? sendPort, ushort? recievePort, int? timeout, SocketHandlerType? socketType)
 			where T : ISerializer, new()
 		{
 			ConnectedIP = ip ?? ConnectedIP;
@@ -330,12 +423,15 @@ namespace SocketIo
 					case SocketHandlerType.Udp:
 						Handler = new UDPHandler(ReceivePort, SendPort, Timeout, this);
 						break;
+					case SocketHandlerType.WebSocket:
+						Handler = new WebSocketHandler(ReceivePort, SendPort, Timeout, this);
+						break;
 				}
 			}
 
 			if (ReceivePort != 0)
 			{
-				Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+				await Handler.ListenAsync(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
 			}
 		}
 

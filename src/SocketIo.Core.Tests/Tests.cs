@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SocketIo.SocketTypes;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SocketIo.Core.Tests
 {
@@ -11,13 +12,13 @@ namespace SocketIo.Core.Tests
 		//Tests cannot be ran with Run All as all but the first will fail due to the socket not being truly closed.
 
 		[TestMethod]
-		public void TestUDP()
+		public async Task TestUDP()
 		{
 			bool hit1 = false;
 			bool hit2 = false;
 
 
-			var socket = Io.Create("127.0.0.1", 4533, 4533, SocketHandlerType.Udp);
+			var socket = await Io.CreateAsync("127.0.0.1", 4533, 4533, SocketHandlerType.Udp);
 
 			socket.On("connect", () =>
 			{
@@ -34,7 +35,7 @@ namespace SocketIo.Core.Tests
 
 			});
 
-			socket.Emit("connect");
+			await socket.EmitAsync("connect");
 
 			int timer = 0;
 			int timeout = 5000;
@@ -51,15 +52,15 @@ namespace SocketIo.Core.Tests
 		}
 
 		[TestMethod]
-		public void TestTCP()
+		public async Task TestTCP()
 		{
 			bool hit1 = false;
 			bool hit2 = false;
 
 
-			var socket = Io.Create("127.0.0.1", 4533, 4533, SocketHandlerType.Udp);
+			var socket = await Io.CreateAsync("127.0.0.1", 4533, 4533, SocketHandlerType.Udp);
 
-			socket.On("connect", () =>
+			socket.On("connect", async () =>
 			{
 				hit1 = true;
 				socket.On("test", (int package) =>
@@ -70,11 +71,11 @@ namespace SocketIo.Core.Tests
 					}
 				});
 
-				socket.Emit("test", 5);
+				await socket.EmitAsync("test", 5);
 
 			});
 
-			socket.Emit("connect");
+			await socket.EmitAsync("connect");
 
 			int timer = 0;
 			int timeout = 5000;
@@ -92,16 +93,16 @@ namespace SocketIo.Core.Tests
 
 
 		[TestMethod]
-		public void TestDualSocket()
+		public async Task TestDualSocket()
 		{
 			bool hit1 = false;
 			bool hit2 = false;
 
-			var socketSender = Io.CreateSender("127.0.0.1", 4533, SocketHandlerType.Udp);
+			var socketSender = await Io.CreateSenderAsync("127.0.0.1", 4533, SocketHandlerType.Udp);
 
-			var socketListener = Io.CreateListener("127.0.0.1", 4533, SocketHandlerType.Udp);
+			var socketListener = await Io.CreateListenerAsync("127.0.0.1", 4533, SocketHandlerType.Udp);
 
-			socketListener.On("connect", () =>
+			socketListener.On("connect", async () =>
 			{
 				hit1 = true;
 				socketListener.On("test", (int package) =>
@@ -112,11 +113,11 @@ namespace SocketIo.Core.Tests
 					}
 				});
 
-				socketSender.Emit("test", 5);
+				await socketSender.EmitAsync("test", 5);
 
 			});
 
-			socketSender.Emit("connect");
+			await socketSender.EmitAsync("connect");
 
 			int timer = 0;
 			int timeout = 5000;

@@ -32,7 +32,7 @@ namespace SocketIo.SocketTypes
 		/// <summary>
 		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task
 		/// </summary>
-		public abstract void Listen(IPEndPoint ReceiveEndPoint);
+		public abstract Task ListenAsync(IPEndPoint ReceiveEndPoint);
 
 
 		/// <summary>
@@ -40,7 +40,7 @@ namespace SocketIo.SocketTypes
 		/// </summary>
 		/// <param name="msg"></param>
 		/// <param name="endpoint"></param>
-		public abstract void Send(SocketMessage msg, IPEndPoint endpoint);
+		public abstract Task SendAsync(SocketMessage msg, IPEndPoint endpoint);
 
 		public abstract void Close();
 	}
