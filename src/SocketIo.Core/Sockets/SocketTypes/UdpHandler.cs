@@ -40,6 +40,7 @@ namespace SocketIo.SocketTypes
 		/// <summary>
 		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task
 		/// </summary>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Await.Warning", "CS4014:Await.Warning")]
 		public override async Task ListenAsync(IPEndPoint ReceiveEndPoint)
 		{
 			_listening = true;
@@ -56,7 +57,45 @@ namespace SocketIo.SocketTypes
 						//asyncReceive.Wait();
 						if (!_listening) { break; }
 						//Parallel.Invoke(() => HandleMessage(asyncReceive));
-						await Task.Run(() => HandleMessage(asyncReceive));
+						Task.Run(() => HandleMessage(asyncReceive));
+					}
+					catch (ObjectDisposedException)
+					{
+
+					}
+					catch (Exception ex)
+					{
+						_listening = false;
+#if DEBUG
+						throw ex;
+#endif
+					}
+				}
+			}
+			_listening = false;
+		}
+
+		/// <summary>
+		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task
+		/// </summary>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Await.Warning", "CS4014:Await.Warning")]
+		public override void Listen(IPEndPoint ReceiveEndPoint)
+		{
+			_listening = true;
+			//ExtendedConsole.Output($"Reading UDP port {ReceivePort}. . .");
+			using (var CurrentClient = GetUDP(ReceiveEndPoint))//Keep outside while loop since that would create overhead and might miss packets
+			{
+
+				while (_listening)
+				{
+					try
+					{
+						UdpReceiveResult asyncReceive = CurrentClient.ReceiveAsync().GetAwaiter().GetResult();
+						//Task<UdpReceiveResult> asyncReceive = CurrentClient.ReceiveAsync();
+						//asyncReceive.Wait();
+						if (!_listening) { break; }
+						//Parallel.Invoke(() => HandleMessage(asyncReceive));
+						Task.Run(() => HandleMessage(asyncReceive));
 					}
 					catch (ObjectDisposedException)
 					{
@@ -86,6 +125,7 @@ namespace SocketIo.SocketTypes
 			}
 
 		}
+
 		/// <summary>
 		/// Sends the message and doesn't wait for input, that should be handled in Listen
 		/// </summary>
@@ -102,6 +142,32 @@ namespace SocketIo.SocketTypes
 					using (CurrentClient.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
 					{
 						await CurrentClient.SendAsync(data, data.Length, endpoint);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+#if DEBUG
+				throw ex;
+#endif
+			}
+		}
+		/// <summary>
+		/// Sends the message and doesn't wait for input, that should be handled in Listen
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="endpoint"></param>
+		public override void Send(SocketMessage msg, IPEndPoint endpoint)
+		{
+			try
+			{
+				msg.CallbackPort = ReceivePort;
+				byte[] data = ParentSocket.Serializer.Serialize(msg);
+				using (var CurrentClient = GetUDP(endpoint.Port))
+				{
+					using (CurrentClient.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
+					{
+						CurrentClient.SendAsync(data, data.Length, endpoint).Wait();
 					}
 				}
 			}

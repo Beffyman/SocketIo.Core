@@ -49,7 +49,7 @@ namespace SocketIo.SocketTypes
 			{
 				await _socket.ConnectAsync(new Uri($@"ws://{ReceiveEndPoint.Address}:{ReceiveEndPoint.Port}"), _cancelToken);
 
-				var result = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+				var result = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), _cancelToken);
 				if (result.MessageType == WebSocketMessageType.Binary)
 				{
 					ParentSocket.HandleMessage(buffer, ReceiveEndPoint.Address);
@@ -65,10 +65,40 @@ namespace SocketIo.SocketTypes
 
 		}
 
+		public override void Listen(IPEndPoint ReceiveEndPoint)
+		{
+			byte[] buffer = new byte[4096];
+			_listening = true;
+			while (_listening)
+			{
+				_socket.ConnectAsync(new Uri($@"ws://{ReceiveEndPoint.Address}:{ReceiveEndPoint.Port}"), _cancelToken).Wait();
+
+				var result = _socket.ReceiveAsync(new ArraySegment<byte>(buffer), _cancelToken).GetAwaiter().GetResult();
+				if (result.MessageType == WebSocketMessageType.Binary)
+				{
+					ParentSocket.HandleMessage(buffer, ReceiveEndPoint.Address);
+				}
+			}
+
+			if (_socket != null)
+			{
+				_socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing normally", _cancelToken).Wait();
+			}
+
+			_listening = false;
+
+		}
+
 		public override async Task SendAsync(SocketMessage msg, IPEndPoint endpoint)
 		{
 			byte[] data = ParentSocket.Serializer.Serialize(msg);
 			await _socket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, _cancelToken);
+		}
+
+		public override void Send(SocketMessage msg, IPEndPoint endpoint)
+		{
+			byte[] data = ParentSocket.Serializer.Serialize(msg);
+			_socket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, _cancelToken).Wait();
 		}
 	}
 }
