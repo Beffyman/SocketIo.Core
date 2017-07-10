@@ -90,16 +90,6 @@ namespace SocketIo
 			return socket;
 		}
 
-		internal static async Task<SocketIo> CreateListenerAsync<T>(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
-			where T : ISerializer, new()
-		{
-			var socket = SetupSocketHandler<T>(ip, 0, recievePort, timeout, socketType);
-
-			await socket.ConnectAsync(recievePort);
-
-			return socket;
-		}
-
 		internal static SocketIo CreateListener<T>(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
 			where T : ISerializer, new()
 		{
@@ -110,23 +100,6 @@ namespace SocketIo
 			return socket;
 		}
 
-		internal async Task ConnectAsync(ushort receivePort)
-		{
-			if (receivePort == 0)
-			{
-				throw new Exception($"ReceivePort cannot be 0, to listen for messages setup the listener.");
-			}
-
-			if (ReceivePort != 0)
-			{
-				throw new Exception($"You cannot add another sender to this socket. Please restart the socket to change settings.");
-			}
-
-			ReceivePort = receivePort;
-			Handler.Setup(ReceivePort, SendPort, Timeout);
-			await Handler.ListenAsync(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
-		}
-
 		internal void Connect(ushort receivePort)
 		{
 			if (receivePort == 0)
@@ -134,14 +107,19 @@ namespace SocketIo
 				throw new Exception($"ReceivePort cannot be 0, to listen for messages setup the listener.");
 			}
 
-			if (ReceivePort != 0)
+			if (ReceivePort != receivePort && ReceivePort != 0)
 			{
 				throw new Exception($"You cannot add another sender to this socket. Please restart the socket to change settings.");
 			}
 
 			ReceivePort = receivePort;
 			Handler.Setup(ReceivePort, SendPort, Timeout);
-			Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+
+			Task.Run(async () =>
+			{
+				await Handler.ListenAsync(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
+			});
+
 		}
 
 		internal async Task AddSenderAsync(ushort sendPort, string initialEmit = null)

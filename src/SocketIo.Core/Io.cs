@@ -99,7 +99,7 @@ namespace SocketIo
 			where T : ISerializer, new()
 		{
 			SocketIo socket = await SocketIo.CreateSenderAsync<T>(ip, sendPort, timeout, type, initialEmit);
-			await socket.AddListenerAsync(receivePort);
+			socket.AddListener(receivePort);
 			return socket;
 		}
 
@@ -116,7 +116,7 @@ namespace SocketIo
 		public static async Task<SocketIo> CreateAsync(string ip, ushort sendPort, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout, string initialEmit = null)
 		{
 			SocketIo socket = await SocketIo.CreateSenderAsync<JsonSerializer>(ip, sendPort, timeout, type, initialEmit);
-			await socket.AddListenerAsync(receivePort);
+			socket.AddListener(receivePort);
 			return socket;
 		}
 
@@ -230,9 +230,9 @@ namespace SocketIo
 		/// <param name="socket"></param>
 		/// <param name="receivePort"></param>
 		/// <returns></returns>
-		public static async Task<SocketIo> AddListenerAsync(this SocketIo socket, ushort receivePort)
+		public static SocketIo AddListener(this SocketIo socket, ushort receivePort)
 		{
-			await socket.ConnectAsync(receivePort);
+			socket.Connect(receivePort);
 			return socket;
 		}
 
@@ -250,18 +250,6 @@ namespace SocketIo
 		}
 
 		/// <summary>
-		/// Adds a listener to the socket
-		/// </summary>
-		/// <param name="socket"></param>
-		/// <param name="receivePort"></param>
-		/// <returns></returns>
-		public static SocketIo AddListener(this SocketIo socket, ushort receivePort)
-		{
-			socket.Connect(receivePort);
-			return socket;
-		}
-
-		/// <summary>
 		/// Adds a sender to the socket
 		/// </summary>
 		/// <param name="socket"></param>
@@ -274,38 +262,6 @@ namespace SocketIo
 			return socket;
 		}
 
-
-		/// <summary>
-		/// Creates a socket that will receive messages
-		/// </summary>
-		/// <typeparam name="T">The type of serializer used.</typeparam>
-		/// <param name="ip"></param>
-		/// <param name="receivePort"></param>
-		/// <param name="type"></param>
-		/// <param name="timeout"></param>
-		/// <returns></returns>
-		public static async Task<SocketIo> CreateListenerAsync<T>(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
-			where T : ISerializer, new()
-		{
-			SocketIo socket = await SocketIo.CreateListenerAsync<T>(ip, receivePort, timeout, type);
-
-			return socket;
-		}
-
-		/// <summary>
-		/// Creates a socket that will receive messages
-		/// </summary>
-		/// <param name="ip"></param>
-		/// <param name="receivePort"></param>
-		/// <param name="type"></param>
-		/// <param name="timeout"></param>
-		/// <returns></returns>
-		public static async Task<SocketIo> CreateListenerAsync(string ip, ushort receivePort, SocketHandlerType type, int timeout = DefaultTimeout)
-		{
-			SocketIo socket = await SocketIo.CreateListenerAsync<JsonSerializer>(ip, receivePort, timeout, type);
-
-			return socket;
-		}
 
 		/// <summary>
 		/// Creates a socket that will receive messages

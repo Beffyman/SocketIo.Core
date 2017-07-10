@@ -159,8 +159,12 @@ namespace SocketIo.SocketTypes
 		public override void Close()
 		{
 			_listening = false;
-			Listener.Stop();
-			Listener.Server.Dispose();
+			if(Listener != null)
+			{
+				Listener.Stop();
+				Listener.Server.Dispose();
+			}
+
 			this.NetworkTimeout = 0;
 			this.ReceivePort = 0;
 			this.SendPort = 0;
