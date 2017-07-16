@@ -54,14 +54,14 @@ namespace SocketIo.Core.Tests
 
 		//WebSockets apparently can't connect to themselves...
 		[TestMethod]
-		public void TestWebSocket()
+		public void TestWebSocket_Server()
 		{
 			bool hit1 = false;
 			bool hit2 = false;
 
-			var randomPort = RandomPort.Get();
+			ushort receivePort = 45544;
 
-			var socket = Io.Create("127.0.0.1", randomPort, randomPort, SocketHandlerType.WebSocket);
+			var socket = Io.CreateListener("0.0.0.0", receivePort, SocketHandlerType.WebSocket);
 
 			socket.On("connect", () =>
 			{
@@ -74,16 +74,10 @@ namespace SocketIo.Core.Tests
 					}
 				});
 
-				socket.Emit("test", 5);
-
 			});
 
-			socket.Emit("connect");
-
 			int timer = 0;
-			int timeout = 5000;
-			while ((!hit1 || !hit2)
-				&& timer < timeout)
+			while (!hit1 || !hit2)
 			{
 				Thread.Sleep(100);
 				timer += 100;
@@ -92,6 +86,16 @@ namespace SocketIo.Core.Tests
 
 			Assert.IsTrue(hit1 && hit2);
 
+		}
+		[TestMethod]
+		public void TestWebSocket_Client()
+		{
+			ushort testPort = 45544;
+
+			var socket = Io.CreateSender("192.168.0.107", testPort, SocketHandlerType.WebSocket);
+
+			socket.Emit("connect");
+			socket.Emit("test", 5);
 		}
 
 
