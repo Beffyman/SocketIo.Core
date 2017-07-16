@@ -31,7 +31,7 @@ namespace SocketIo
 		private static SocketIo SetupSocketHandler<T>(string ip, ushort sendPort, ushort receivePort, int timeout, SocketHandlerType socketType)
 			where T : ISerializer, new()
 		{
-			SocketIo socket = new SocketIo
+			var socket = new SocketIo
 			{
 				ConnectedIP = ip,
 				SendPort = sendPort,
@@ -46,19 +46,19 @@ namespace SocketIo
 				switch (socketType)
 				{
 					case SocketHandlerType.Tcp:
-						socket.Handler = new TCPHandler(socket.ReceivePort, socket.SendPort, socket.Timeout, socket);
+						socket.Handler = new TCPHandler(ip,socket.SendPort, socket.ReceivePort, socket.Timeout, socket);
 						break;
 					case SocketHandlerType.Udp:
-						socket.Handler = new UDPHandler(socket.ReceivePort, socket.SendPort, socket.Timeout, socket);
+						socket.Handler = new UDPHandler(ip, socket.SendPort, socket.ReceivePort, socket.Timeout, socket);
 						break;
 					case SocketHandlerType.WebSocket:
-						socket.Handler = new WebSocketHandler(socket.ReceivePort, socket.SendPort, socket.Timeout, socket);
+						socket.Handler = new WebSocketHandler(ip, socket.SendPort, socket.ReceivePort, socket.Timeout, socket);
 						break;
 				}
 			}
 			else
 			{
-				socket.Handler.Setup(socket.ReceivePort, socket.SendPort, socket.Timeout);
+				socket.Handler.Setup(socket.ConnectedIP, socket.SendPort, socket.ReceivePort, socket.Timeout);
 			}
 
 			return socket;
@@ -67,7 +67,7 @@ namespace SocketIo
 		internal static async Task<SocketIo> CreateSenderAsync<T>(string ip, ushort sendPort, int timeout, SocketHandlerType socketType, string initialEmit = null)
 			where T : ISerializer, new()
 		{
-			var socket = SetupSocketHandler<T>(ip, sendPort, 0, timeout, socketType);
+			var socket = SetupSocketHandler<T>(ip, sendPort,0, timeout, socketType);
 
 			if (!string.IsNullOrEmpty(initialEmit))
 			{
@@ -80,7 +80,7 @@ namespace SocketIo
 		internal static SocketIo CreateSender<T>(string ip, ushort sendPort, int timeout, SocketHandlerType socketType, string initialEmit = null)
 			where T : ISerializer, new()
 		{
-			var socket = SetupSocketHandler<T>(ip, sendPort, 0, timeout, socketType);
+			var socket = SetupSocketHandler<T>(ip, sendPort,0, timeout, socketType);
 
 			if (!string.IsNullOrEmpty(initialEmit))
 			{
@@ -90,30 +90,25 @@ namespace SocketIo
 			return socket;
 		}
 
-		internal static SocketIo CreateListener<T>(string ip, ushort recievePort, int timeout, SocketHandlerType socketType)
+		internal static SocketIo CreateListener<T>(string ip, ushort receivePort, int timeout, SocketHandlerType socketType)
 			where T : ISerializer, new()
 		{
-			var socket = SetupSocketHandler<T>(ip, 0, recievePort, timeout, socketType);
+			var socket = SetupSocketHandler<T>(ip, 0, receivePort, timeout, socketType);
 
-			socket.Connect(recievePort);
+			socket.Connect(receivePort);
 
 			return socket;
 		}
 
 		internal void Connect(ushort receivePort)
 		{
-			if (receivePort == 0)
+			ReceivePort = receivePort;
+			if (ReceivePort == 0)
 			{
 				throw new Exception($"ReceivePort cannot be 0, to listen for messages setup the listener.");
 			}
 
-			if (ReceivePort != receivePort && ReceivePort != 0)
-			{
-				throw new Exception($"You cannot add another sender to this socket. Please restart the socket to change settings.");
-			}
-
-			ReceivePort = receivePort;
-			Handler.Setup(ReceivePort, SendPort, Timeout);
+			Handler.Setup(ConnectedIP, 0,ReceivePort, Timeout);
 
 			Task.Run(async () =>
 			{
@@ -122,40 +117,28 @@ namespace SocketIo
 
 		}
 
-		internal async Task AddSenderAsync(ushort sendPort, string initialEmit = null)
+		internal async Task AddSenderAsync(string initialEmit = null)
 		{
-			if (sendPort == 0)
+			if (SendPort == 0)
 			{
 				throw new Exception($"SendPort cannot be 0, to emit messages setup the sender.");
 			}
 
-			if (SendPort != 0)
-			{
-				throw new Exception($"You cannot add another listener to this socket. Please restart the socket to change settings.");
-			}
-
-			SendPort = sendPort;
-			Handler.Setup(ReceivePort, SendPort, Timeout);
+			Handler.Setup(ConnectedIP, SendPort,0, Timeout);
 			if (!string.IsNullOrEmpty(initialEmit))
 			{
 				await EmitAsync(initialEmit, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
 			}
 		}
 
-		internal void AddSender(ushort sendPort, string initialEmit = null)
+		internal void AddSender(string initialEmit = null)
 		{
-			if (sendPort == 0)
+			if (SendPort == 0)
 			{
 				throw new Exception($"SendPort cannot be 0, to emit messages setup the sender.");
 			}
 
-			if (SendPort != 0)
-			{
-				throw new Exception($"You cannot add another listener to this socket. Please restart the socket to change settings.");
-			}
-
-			SendPort = sendPort;
-			Handler.Setup(ReceivePort, SendPort, Timeout);
+			Handler.Setup(ConnectedIP, SendPort,0, Timeout);
 			if (!string.IsNullOrEmpty(initialEmit))
 			{
 				Emit(initialEmit, new IPEndPoint(IPAddress.Parse(ConnectedIP), SendPort));
@@ -170,7 +153,7 @@ namespace SocketIo
 		/// <returns></returns>
 		public Emitter On(string @event, Action body)
 		{
-			Emitter e = new Emitter(@event, body);
+			var e = new Emitter(@event, body);
 			Emitters.TryAdd(e.Event, e);
 
 			return e;
@@ -185,7 +168,7 @@ namespace SocketIo
 		/// <returns></returns>
 		public Emitter<T> On<T>(string @event, Action<T> body)
 		{
-			Emitter<T> e = new Emitter<T>(@event, body);
+			var e = new Emitter<T>(@event, body);
 			Emitters.TryAdd(e.Event, e);
 
 			return e;
@@ -202,7 +185,7 @@ namespace SocketIo
 		/// <param name="event"></param>
 		public async Task EmitAsync(string @event)
 		{
-			SocketMessage sm = new SocketMessage
+			var sm = new SocketMessage
 			{
 				Content = null,
 				Event = @event,
@@ -219,7 +202,7 @@ namespace SocketIo
 		/// <param name="message"></param>
 		public async Task EmitAsync<T>(string @event, T message)
 		{
-			SocketMessage sm = new SocketMessage
+			var sm = new SocketMessage
 			{
 				Content = message,
 				Event = @event,
@@ -236,7 +219,7 @@ namespace SocketIo
 		/// <param name="endpoint"></param>
 		public async Task EmitAsync(string @event, IPEndPoint endpoint)
 		{
-			SocketMessage sm = new SocketMessage
+			var sm = new SocketMessage
 			{
 				Content = null,
 				Event = @event,
@@ -255,7 +238,7 @@ namespace SocketIo
 		/// <param name="endpoint"></param>
 		public async Task EmitAsync<T>(string @event, T message, IPEndPoint endpoint)
 		{
-			SocketMessage sm = new SocketMessage
+			var sm = new SocketMessage
 			{
 				Content = message,
 				Event = @event,
@@ -269,7 +252,7 @@ namespace SocketIo
 		{
 			if (SendPort == 0)
 			{
-				throw new Exception($"SendPort cannot be 0, to emit messages setup the sender.");
+				throw new Exception($"Port cannot be 0, to emit messages setup the sender.");
 			}
 
 			if (CurrentEmitter != null)
@@ -292,7 +275,7 @@ namespace SocketIo
 		/// <param name="event"></param>
 		public void Emit(string @event)
 		{
-			SocketMessage sm = new SocketMessage
+			var sm = new SocketMessage
 			{
 				Content = null,
 				Event = @event,
@@ -309,7 +292,7 @@ namespace SocketIo
 		/// <param name="message"></param>
 		public void Emit<T>(string @event, T message)
 		{
-			SocketMessage sm = new SocketMessage
+			var sm = new SocketMessage
 			{
 				Content = message,
 				Event = @event,
@@ -390,12 +373,12 @@ namespace SocketIo
 
 		#region Reset
 
-		private void ResetValues<T>(string ip, ushort? sendPort, ushort? recievePort, int? timeout, SocketHandlerType? socketType)
+		private void ResetValues<T>(string ip, ushort? sendPort, ushort? receivePort, int? timeout, SocketHandlerType? socketType)
 			where T : ISerializer, new()
 		{
 			ConnectedIP = ip ?? ConnectedIP;
 			SendPort = sendPort ?? SendPort;
-			ReceivePort = recievePort ?? ReceivePort;
+			ReceivePort = receivePort ?? ReceivePort;
 			Timeout = timeout ?? Timeout;
 
 			SetupSerializer<T>();
@@ -414,56 +397,17 @@ namespace SocketIo
 				switch (socketType)
 				{
 					case SocketHandlerType.Tcp:
-						Handler = new TCPHandler(ReceivePort, SendPort, Timeout, this);
+						Handler = new TCPHandler(ConnectedIP, SendPort, ReceivePort, Timeout, this);
 						break;
 					case SocketHandlerType.Udp:
-						Handler = new UDPHandler(ReceivePort, SendPort, Timeout, this);
+						Handler = new UDPHandler(ConnectedIP, SendPort, ReceivePort, Timeout, this);
 						break;
 					case SocketHandlerType.WebSocket:
-						Handler = new WebSocketHandler(ReceivePort, SendPort, Timeout, this);
+						Handler = new WebSocketHandler(ConnectedIP, SendPort, ReceivePort, Timeout, this);
 						break;
 				}
 			}
 		}
-
-		#region Sync
-
-		internal void Reset(string ip, ushort? sendPort, ushort? receivePort, int? timeout, SocketHandlerType? socketType)
-		{
-			Reset<JsonSerializer>(ip, sendPort, receivePort, timeout, socketType);
-		}
-
-		internal void Reset<T>(string ip, ushort? sendPort, ushort? receivePort, int? timeout, SocketHandlerType? socketType)
-			where T : ISerializer, new()
-		{
-			ResetValues<T>(ip, sendPort, receivePort, timeout, socketType);
-
-			if (ReceivePort != 0)
-			{
-				Handler.Listen(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
-			}
-		}
-
-		#endregion
-
-		#region Async
-
-		internal async Task ResetAsync(string ip, ushort? sendPort, ushort? receivePort, int? timeout, SocketHandlerType? socketType)
-		{
-			await ResetAsync<JsonSerializer>(ip, sendPort, receivePort, timeout, socketType);
-		}
-
-		internal async Task ResetAsync<T>(string ip, ushort? sendPort, ushort? receivePort, int? timeout, SocketHandlerType? socketType)
-			where T : ISerializer, new()
-		{
-			ResetValues<T>(ip, sendPort, receivePort, timeout, socketType);
-
-			if (ReceivePort != 0)
-			{
-				await Handler.ListenAsync(new IPEndPoint(IPAddress.Parse(ConnectedIP), ReceivePort));
-			}
-		}
-		#endregion
 
 		#endregion
 
@@ -473,15 +417,36 @@ namespace SocketIo
 			Serializer = Activator.CreateInstance<T>();
 		}
 
+		private readonly object _lockEmitter = new object();
+
 		internal void HandleMessage(byte[] message, IPAddress endpoint)
 		{
 			SocketMessage msg = Serializer.Deserialize<SocketMessage>(message);
 			IPEndPoint ipPort = new IPEndPoint(endpoint, msg.CallbackPort);
 			if (Emitters.ContainsKey(msg.Event))
 			{
-				CurrentEmitter = Emitters[msg.Event];
-				CurrentEmitter.Invoke(msg, ipPort);
-				CurrentEmitter = null;
+				lock (_lockEmitter)
+				{
+					CurrentEmitter = Emitters[msg.Event];
+					CurrentEmitter.Invoke(msg, ipPort);
+					CurrentEmitter = null;
+				}
+			}
+		}
+
+		internal void HandleMessage(string message, IPAddress endpoint)
+		{
+			var bytes = System.Text.Encoding.UTF8.GetBytes(message);
+			SocketMessage msg = Serializer.Deserialize<SocketMessage>(bytes);
+			IPEndPoint ipPort = new IPEndPoint(endpoint, msg.CallbackPort);
+			if (Emitters.ContainsKey(msg.Event))
+			{
+				lock (_lockEmitter)
+				{
+					CurrentEmitter = Emitters[msg.Event];
+					CurrentEmitter.Invoke(msg, ipPort);
+					CurrentEmitter = null;
+				}
 			}
 		}
 	}

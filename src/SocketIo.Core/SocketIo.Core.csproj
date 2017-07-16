@@ -13,30 +13,40 @@
 		<Authors>Beffyman</Authors>
 		<Company />
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.6|AnyCPU'">
-		<DocumentationFile>bin\Release\netstandard1.6\SocketIo.Core.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='netstandard1.6|AnyCPU'">
+		<DefineConstants>NETSTANDARD16</DefineConstants>
+		<DocumentationFile>bin\$(Configuration)\netstandard1.6\SocketIo.Core.xml</DocumentationFile>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp1.0|AnyCPU'">
-		<DocumentationFile>bin\Release\netcoreapp1.0\SocketIo.Core.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='netcoreapp1.0|AnyCPU'">
+		<DefineConstants>NETCOREAPP10</DefineConstants>
+		<DocumentationFile>bin\$(Configuration)\netcoreapp1.0\SocketIo.Core.xml</DocumentationFile>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
-		<DocumentationFile>bin\Release\net45\SocketIo.Core.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='net45|AnyCPU'">
+		<DefineConstants>NET45</DefineConstants>
+		<DocumentationFile>bin\$(Configuration)\net45\SocketIo.Core.xml</DocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
 		<PackageReference Include="protobuf-net" Version="2.2.1" />
+		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
-	  <PackageReference Include="System.Net.WebSockets.Client">
-	    <Version>4.3.1</Version>
-	  </PackageReference>
+		<PackageReference Include="System.Net.Security">
+		  <Version>4.3.1</Version>
+		</PackageReference>
+		<PackageReference Include="System.Net.WebSockets.Client" Version="4.3.1" />
+		<PackageReference Include="System.Threading.Thread">
+		  <Version>4.3.0</Version>
+		</PackageReference>
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0'">
-	  <PackageReference Include="Microsoft.AspNetCore.WebSockets">
-	    <Version>1.0.2</Version>
-	  </PackageReference>
-	  <PackageReference Include="System.Net.WebSockets.Client">
-	    <Version>4.3.1</Version>
-	  </PackageReference>
+		<PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="1.0.2" />
+		<PackageReference Include="System.Net.Security">
+		  <Version>4.3.1</Version>
+		</PackageReference>
+		<PackageReference Include="System.Net.WebSockets.Client" Version="4.3.1" />
+		<PackageReference Include="System.Threading.Thread">
+		  <Version>4.3.0</Version>
+		</PackageReference>
 	</ItemGroup>
 </Project>

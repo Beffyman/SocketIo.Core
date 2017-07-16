@@ -7,26 +7,28 @@ namespace SocketIo.SocketTypes
 {
 	internal abstract class BaseNetworkProtocol
 	{
-		public bool Listening { get { return _listening; } }
+		public bool Listening => _listening;
 		protected bool _listening = false;
 
+		protected string IpAddress = null;
 		protected int NetworkTimeout = 0;
-		protected ushort ReceivePort = 0;
 		protected ushort SendPort = 0;
+		protected ushort ReceivePort = 0;
 
 		protected SocketIo ParentSocket { get; set; }
 
-		public BaseNetworkProtocol(ushort receivePort, ushort sendPort, int timeout, SocketIo parentSocket)
+		public BaseNetworkProtocol(string ip, ushort sendPort, ushort receivePort, int timeout, SocketIo parentSocket)
 		{
-			Setup(receivePort, sendPort, timeout);
+			Setup(ip, sendPort, receivePort, timeout);
 			ParentSocket = parentSocket;
 		}
 
-		internal void Setup(ushort receivePort, ushort sendPort, int timeout)
+		internal void Setup(string ip, ushort sendPort, ushort receivePort, int timeout)
 		{
+			IpAddress = ip;
 			NetworkTimeout = timeout;
-			ReceivePort = receivePort;
 			SendPort = sendPort;
+			ReceivePort = receivePort;
 		}
 
 		/// <summary>
@@ -41,11 +43,6 @@ namespace SocketIo.SocketTypes
 		/// <param name="msg"></param>
 		/// <param name="endpoint"></param>
 		public abstract Task SendAsync(SocketMessage msg, IPEndPoint endpoint);
-
-		/// <summary>
-		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task
-		/// </summary>
-		public abstract void Listen(IPEndPoint ReceiveEndPoint);
 
 
 		/// <summary>
@@ -72,6 +69,16 @@ namespace SocketIo.SocketTypes
 			return await task;
 		}
 
+		public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
+		{
+			var tcs = new TaskCompletionSource<bool>();
+			using (cancellationToken.Register(
+				  s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
+				if (task != await Task.WhenAny(task, tcs.Task))
+					throw new OperationCanceledException(cancellationToken);
+			await task;
+		}
+
 
 
 		public static IDisposable CreateTimeoutScope(this IDisposable disposable, TimeSpan timeSpan)
@@ -82,6 +89,7 @@ namespace SocketIo.SocketTypes
 			  () =>
 			  {
 				  cancellationTokenRegistration.Dispose();
+				  cancellationTokenSource.Cancel();
 				  cancellationTokenSource.Dispose();
 				  disposable.Dispose();
 			  });

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SocketIo.SocketTypes
@@ -10,17 +11,12 @@ namespace SocketIo.SocketTypes
 	/// </summary>
 	internal sealed class UDPHandler : BaseNetworkProtocol
 	{
-		public UDPHandler(ushort receivePort, ushort sendPort, int timeout, SocketIo parentSocket)
-		  : base(receivePort, sendPort, timeout, parentSocket)
+		public UDPHandler(string ip, ushort sendPort, ushort receivePort, int timeout, SocketIo parentSocket)
+		  : base(ip, sendPort, receivePort, timeout, parentSocket)
 		{
 
 		}
 
-		/// <summary>
-		/// Wrapper for creating a non-blocking UDP port
-		/// </summary>
-		/// <param name="port"></param>
-		/// <returns></returns>
 		private UdpClient GetUDP(int port)
 		{
 			return GetUDP(new IPEndPoint(IPAddress.Any, port));
@@ -44,72 +40,39 @@ namespace SocketIo.SocketTypes
 		public override async Task ListenAsync(IPEndPoint ReceiveEndPoint)
 		{
 			_listening = true;
-			//ExtendedConsole.Output($"Reading UDP port {ReceivePort}. . .");
-			using (var CurrentClient = GetUDP(ReceiveEndPoint))//Keep outside while loop since that would create overhead and might miss packets
+			using(var client = GetUDP(ReceiveEndPoint))
 			{
-
 				while (_listening)
 				{
 					try
 					{
-						UdpReceiveResult asyncReceive = await CurrentClient.ReceiveAsync();
-						//Task<UdpReceiveResult> asyncReceive = CurrentClient.ReceiveAsync();
-						//asyncReceive.Wait();
+						UdpReceiveResult asyncReceive = await client.ReceiveAsync();
+
 						if (!_listening) { break; }
-						//Parallel.Invoke(() => HandleMessage(asyncReceive));
-						Task.Run(() => HandleMessage(asyncReceive));
+
+						if (asyncReceive != null)
+						{
+							Task.Run(() => HandleMessage(asyncReceive));
+						}
+					}
+					catch (OperationCanceledException)
+					{
+
 					}
 					catch (ObjectDisposedException)
 					{
 
 					}
-					catch (Exception ex)
+					catch (Exception)
 					{
 						_listening = false;
 #if DEBUG
-						throw ex;
+						throw;
 #endif
 					}
 				}
 			}
-			_listening = false;
-		}
 
-		/// <summary>
-		/// Listens to incoming UDP packets on the ReceivePort and passes them to the HandleMessage in a Parallel task
-		/// </summary>
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("Await.Warning", "CS4014:Await.Warning")]
-		public override void Listen(IPEndPoint ReceiveEndPoint)
-		{
-			_listening = true;
-			//ExtendedConsole.Output($"Reading UDP port {ReceivePort}. . .");
-			using (var CurrentClient = GetUDP(ReceiveEndPoint))//Keep outside while loop since that would create overhead and might miss packets
-			{
-
-				while (_listening)
-				{
-					try
-					{
-						UdpReceiveResult asyncReceive = CurrentClient.ReceiveAsync().GetAwaiter().GetResult();
-						//Task<UdpReceiveResult> asyncReceive = CurrentClient.ReceiveAsync();
-						//asyncReceive.Wait();
-						if (!_listening) { break; }
-						//Parallel.Invoke(() => HandleMessage(asyncReceive));
-						Task.Run(() => HandleMessage(asyncReceive));
-					}
-					catch (ObjectDisposedException)
-					{
-
-					}
-					catch (Exception ex)
-					{
-						_listening = false;
-#if DEBUG
-						throw ex;
-#endif
-					}
-				}
-			}
 			_listening = false;
 		}
 
@@ -137,18 +100,21 @@ namespace SocketIo.SocketTypes
 			{
 				msg.CallbackPort = ReceivePort;
 				byte[] data = ParentSocket.Serializer.Serialize(msg);
-				using (var CurrentClient = GetUDP(endpoint.Port))
+
+				using (var client = GetUDP(endpoint.Port))
+				using (client.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
 				{
-					using (CurrentClient.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
-					{
-						await CurrentClient.SendAsync(data, data.Length, endpoint);
-					}
+					await client.SendAsync(data, data.Length, endpoint);
 				}
 			}
-			catch (Exception ex)
+			catch (OperationCanceledException)
+			{
+
+			}
+			catch (Exception)
 			{
 #if DEBUG
-				throw ex;
+				throw;
 #endif
 			}
 		}
@@ -163,18 +129,21 @@ namespace SocketIo.SocketTypes
 			{
 				msg.CallbackPort = ReceivePort;
 				byte[] data = ParentSocket.Serializer.Serialize(msg);
-				using (var CurrentClient = GetUDP(endpoint.Port))
+
+				using (var client = GetUDP(endpoint.Port))
+				using (client.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
 				{
-					using (CurrentClient.CreateTimeoutScope(TimeSpan.FromMilliseconds(NetworkTimeout)))
-					{
-						CurrentClient.SendAsync(data, data.Length, endpoint).Wait();
-					}
+					client.SendAsync(data, data.Length, endpoint).GetAwaiter().GetResult();
 				}
 			}
-			catch (Exception ex)
+			catch (OperationCanceledException)
+			{
+
+			}
+			catch (Exception)
 			{
 #if DEBUG
-				throw ex;
+				throw;
 #endif
 			}
 		}
@@ -182,6 +151,7 @@ namespace SocketIo.SocketTypes
 		public override void Close()
 		{
 			_listening = false;
+
 			this.NetworkTimeout = 0;
 			this.ReceivePort = 0;
 			this.SendPort = 0;
