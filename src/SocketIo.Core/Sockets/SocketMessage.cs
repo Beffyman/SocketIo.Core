@@ -3,7 +3,7 @@
 namespace SocketIo
 {
 
-	internal class SocketMessage
+    internal class SocketMessage
 	{
 		public string Event { get; set; }
 

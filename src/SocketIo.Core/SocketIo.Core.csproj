@@ -1,52 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFrameworks>
-			netstandard1.6;
-			netcoreapp1.0;
-			net45;
-		</TargetFrameworks>
-		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-		<DefineConstants>TRACE</DefineConstants>
-		<Description>Dot Net Core looking implementation of Socket.IO.  This is NOT Socket.IO and it is merely a Udp/Tcp socket abstraction that looks like it.</Description>
-		<PackageTags>C# Socket.IO Core</PackageTags>
-		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Authors>Beffyman</Authors>
-		<Company />
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='netstandard1.6|AnyCPU'">
-		<DefineConstants>NETSTANDARD16</DefineConstants>
-		<DocumentationFile>bin\$(Configuration)\netstandard1.6\SocketIo.Core.xml</DocumentationFile>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='netcoreapp1.0|AnyCPU'">
-		<DefineConstants>NETCOREAPP10</DefineConstants>
-		<DocumentationFile>bin\$(Configuration)\netcoreapp1.0\SocketIo.Core.xml</DocumentationFile>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='net45|AnyCPU'">
-		<DefineConstants>NET45</DefineConstants>
-		<DocumentationFile>bin\$(Configuration)\net45\SocketIo.Core.xml</DocumentationFile>
-	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="protobuf-net" Version="2.2.1" />
-		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
-		<PackageReference Include="System.Net.Security">
-		  <Version>4.3.1</Version>
-		</PackageReference>
-		<PackageReference Include="System.Net.WebSockets.Client" Version="4.3.1" />
-		<PackageReference Include="System.Threading.Thread">
-		  <Version>4.3.0</Version>
-		</PackageReference>
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0'">
-		<PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="1.0.2" />
-		<PackageReference Include="System.Net.Security">
-		  <Version>4.3.1</Version>
-		</PackageReference>
-		<PackageReference Include="System.Net.WebSockets.Client" Version="4.3.1" />
-		<PackageReference Include="System.Threading.Thread">
-		  <Version>4.3.0</Version>
-		</PackageReference>
-	</ItemGroup>
+  
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Beffyman;JuanluElGuerre</Authors>
+    <Copyright>Copyright 2018</Copyright>
+    <Description>Abstraction of TCP/UDP sockets that writes like Socket.IO</Description>
+    <PackageLicenseUrl>https://github.com/Beffyman/SocketIo.Core/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Beffyman/SocketIo.Core</PackageProjectUrl>
+    <Company />
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>4.0.0</Version>
+    <PackageTags>dotnetcore, dotnet,c#</PackageTags>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETCOREAPP;NETCOREAPP2_1</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+  
 </Project>

@@ -55,8 +55,6 @@ namespace SocketIo.SocketTypes
 		public abstract void Close();
 	}
 
-
-
 	internal static class AsyncTimeouts
 	{
 		public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
@@ -78,8 +76,6 @@ namespace SocketIo.SocketTypes
 					throw new OperationCanceledException(cancellationToken);
 			await task;
 		}
-
-
 
 		public static IDisposable CreateTimeoutScope(this IDisposable disposable, TimeSpan timeSpan)
 		{

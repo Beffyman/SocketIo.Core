@@ -1,17 +1,18 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.AspNetCore.TestHost;
 using SocketIo.SocketTypes;
 using System.Threading;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace SocketIo.Core.Tests
 {
-	[TestClass]
-	public class WebSocketTests
+    public class WebSocketTests
 	{
-		//Tests cannot be ran with Run All as all but the first will fail due to the socket not being truly closed.
+        private const string IP = "127.0.0.1";
 
-		[TestMethod]
+        //Tests cannot be ran with Run All as all but the first will fail due to the socket not being truly closed.
+
+        [Fact]
 		public async Task TestWebSocketAsync()
 		{
 			bool hit1 = false;
@@ -19,7 +20,7 @@ namespace SocketIo.Core.Tests
 
 			var randomPort = RandomPort.Get();
 
-			var socket = await Io.CreateAsync("127.0.0.1", randomPort, randomPort, SocketHandlerType.WebSocket);
+			var socket = await Io.CreateAsync(IP, randomPort, randomPort, SocketHandlerType.WebSocket);
 
 			socket.On("connect", async () =>
 			{
@@ -48,18 +49,18 @@ namespace SocketIo.Core.Tests
 			}
 			socket.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
 
 		//WebSockets apparently can't connect to themselves...
-		[TestMethod]
+		[Fact]
 		public void TestWebSocket_Server()
 		{
 			bool hit1 = false;
 			bool hit2 = false;
 
-			ushort receivePort = 45544;
+            ushort receivePort = 3000; // 45544;
 
 			var socket = Io.CreateListener("0.0.0.0", receivePort, SocketHandlerType.WebSocket);
 
@@ -84,23 +85,21 @@ namespace SocketIo.Core.Tests
 			}
 			socket.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
-		[TestMethod]
+		[Fact]
 		public void TestWebSocket_Client()
 		{
-			ushort testPort = 45544;
+            ushort testPort = 3000; //  45544;
 
-			var socket = Io.CreateSender("192.168.0.107", testPort, SocketHandlerType.WebSocket);
+			var socket = Io.CreateSender(IP, testPort, SocketHandlerType.WebSocket);
 
 			socket.Emit("connect");
 			socket.Emit("test", 5);
 		}
 
-
-
-		[TestMethod]
+		[Fact]
 		public async Task TestDualSocketWebSocketPAsync()
 		{
 			bool hit1 = false;
@@ -108,9 +107,9 @@ namespace SocketIo.Core.Tests
 
 			var randomPort = RandomPort.Get();
 
-			var socketListener = Io.CreateListener("127.0.0.1", randomPort, SocketHandlerType.WebSocket);
+			var socketListener = Io.CreateListener(IP, randomPort, SocketHandlerType.WebSocket);
 
-			var socketSender = await Io.CreateSenderAsync("127.0.0.1", randomPort, SocketHandlerType.WebSocket);
+			var socketSender = await Io.CreateSenderAsync(IP, randomPort, SocketHandlerType.WebSocket);
 
 			socketListener.On("connect", async () =>
 			{
@@ -141,11 +140,11 @@ namespace SocketIo.Core.Tests
 			socketSender.Close();
 			socketListener.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TestDualSocketWebSocket()
 		{
 			bool hit1 = false;
@@ -153,9 +152,9 @@ namespace SocketIo.Core.Tests
 
 			var randomPort = RandomPort.Get();
 
-			var socketListener = Io.CreateListener("127.0.0.1", randomPort, SocketHandlerType.WebSocket);
+			var socketListener = Io.CreateListener(IP, randomPort, SocketHandlerType.WebSocket);
 
-			var socketSender = Io.CreateSender("127.0.0.1", randomPort, SocketHandlerType.WebSocket);
+			var socketSender = Io.CreateSender(IP, randomPort, SocketHandlerType.WebSocket);
 
 
 			socketListener.On("connect", () =>
@@ -187,7 +186,7 @@ namespace SocketIo.Core.Tests
 			socketSender.Close();
 			socketListener.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
 	}
