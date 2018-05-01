@@ -1,12 +1,11 @@
-﻿using System;
-using SocketIo.SocketTypes;
+﻿using SocketIo.SocketTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace SocketIo.Core.Tests
 {
-	public class TcpTests
+    public class TcpTests
 	{
         private const string IP = "127.0.0.1";
 

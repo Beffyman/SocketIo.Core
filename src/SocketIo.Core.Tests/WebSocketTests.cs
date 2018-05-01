@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.TestHost;
 using SocketIo.SocketTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace SocketIo.Core.Tests
-{   
-	public class WebSocketTests
+{
+    public class WebSocketTests
 	{
         private const string IP = "127.0.0.1";
 
@@ -60,7 +60,7 @@ namespace SocketIo.Core.Tests
 			bool hit1 = false;
 			bool hit2 = false;
 
-			ushort receivePort = 45544;
+            ushort receivePort = 3000; // 45544;
 
 			var socket = Io.CreateListener("0.0.0.0", receivePort, SocketHandlerType.WebSocket);
 
@@ -91,15 +91,13 @@ namespace SocketIo.Core.Tests
 		[Fact]
 		public void TestWebSocket_Client()
 		{
-			ushort testPort = 45544;
+            ushort testPort = 3000; //  45544;
 
-			var socket = Io.CreateSender("192.168.0.107", testPort, SocketHandlerType.WebSocket);
+			var socket = Io.CreateSender(IP, testPort, SocketHandlerType.WebSocket);
 
 			socket.Emit("connect");
 			socket.Emit("test", 5);
 		}
-
-
 
 		[Fact]
 		public async Task TestDualSocketWebSocketPAsync()

@@ -1,17 +1,14 @@
-﻿using SocketIo.SocketTypes;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Net;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace SocketIo.SocketTypes
 {
-	//https://gist.githubusercontent.com/xamlmonkey/4737291/raw/714f4feda3a4081b3ce761ee9f1535624d68d582/WebSocketWrapper.cs
-	internal sealed class WebSocketWrapper
+    //https://gist.githubusercontent.com/xamlmonkey/4737291/raw/714f4feda3a4081b3ce761ee9f1535624d68d582/WebSocketWrapper.cs
+    internal sealed class WebSocketWrapper
 	{
 		private const int ReceiveChunkSize = 1024;
 		private const int SendChunkSize = 1024;
@@ -209,7 +206,6 @@ namespace SocketIo.SocketTypes
 		}
 	}
 
-
 	internal sealed class WebSocketHandler : BaseNetworkProtocol
 	{
 		private WebSocketWrapper _socket;
@@ -262,15 +258,8 @@ namespace SocketIo.SocketTypes
 				ParentSocket.HandleMessage(data, ReceiveEndPoint.Address);
 			});
 
-#if NET45
-			await Task.Run(()=> { });
-#endif
-#if NETSTANDARD16 || NETCOREAPP10
 			await Task.CompletedTask;
-#endif
-
 		}
-
 
 		public override async Task SendAsync(SocketMessage msg, IPEndPoint endpoint)
 		{
@@ -278,12 +267,7 @@ namespace SocketIo.SocketTypes
 
 			_socket.SendMessage(data);
 
-#if NET45
-			await Task.Run(()=> { });
-#endif
-#if NETSTANDARD16 || NETCOREAPP10
 			await Task.CompletedTask;
-#endif
 		}
 
 		public override void Send(SocketMessage msg, IPEndPoint endpoint)

@@ -58,7 +58,6 @@ namespace SocketIo.SocketTypes
 			_listening = false;
 		}
 
-
 		public override async Task SendAsync(SocketMessage msg, IPEndPoint endpoint)
 		{
 			try

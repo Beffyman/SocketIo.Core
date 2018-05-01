@@ -7,15 +7,14 @@ using System.Threading.Tasks;
 
 namespace SocketIo
 {
-	/// <summary>
-	/// Abstraction of a UDP/TCP client that writes like Socket.IO
-	/// </summary>
-	public sealed class SocketIo
+    /// <summary>
+    /// Abstraction of a UDP/TCP client that writes like Socket.IO
+    /// </summary>
+    public sealed class SocketIo
 	{
 		private ConcurrentDictionary<string, BaseEmitter> Emitters { get; set; } = new ConcurrentDictionary<string, BaseEmitter>();
 
 		internal ISerializer Serializer;
-
 		private ushort SendPort { get; set; }
 		private ushort ReceivePort { get; set; }
 		private int Timeout { get; set; }

@@ -1,5 +1,4 @@
-﻿using System;
-using SocketIo.SocketTypes;
+﻿using SocketIo.SocketTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
