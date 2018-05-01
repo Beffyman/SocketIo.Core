@@ -1,25 +1,26 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SocketIo.SocketTypes;
 using System.Threading;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace SocketIo.Core.Tests
 {
-	[TestClass]
-	public class UdpTests
+    public class UdpTests
 	{
-		//Tests cannot be ran with Run All as all but the first will fail due to the socket not being truly closed.
+        private const string IP = "127.0.0.1";
 
-		[TestMethod]
-		public async Task TestUDPAsync()
+        //Tests cannot be ran with Run All as all but the first will fail due to the socket not being truly closed.
+
+        [Fact]
+        public async Task TestUDPAsync()
 		{
 			bool hit1 = false;
 			bool hit2 = false;
 
 			var randomPort = RandomPort.Get();
 
-			var socket = await Io.CreateAsync("127.0.0.1", randomPort, randomPort, SocketHandlerType.Udp);
+			var socket = await Io.CreateAsync(IP, randomPort, randomPort, SocketHandlerType.Udp);
 
 			socket.On("connect", async () =>
 			{
@@ -48,11 +49,11 @@ namespace SocketIo.Core.Tests
 			}
 			socket.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TestUDP()
 		{
 			bool hit1 = false;
@@ -60,7 +61,7 @@ namespace SocketIo.Core.Tests
 
 			var randomPort = RandomPort.Get();
 
-			var socket = Io.Create("127.0.0.1", randomPort, randomPort, SocketHandlerType.Udp);
+			var socket = Io.Create(IP, randomPort, randomPort, SocketHandlerType.Udp);
 
 			socket.On("connect", () =>
 			{
@@ -89,11 +90,11 @@ namespace SocketIo.Core.Tests
 			}
 			socket.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task TestDualSocketUDPAsync()
 		{
 			bool hit1 = false;
@@ -101,9 +102,9 @@ namespace SocketIo.Core.Tests
 
 			var randomPort = RandomPort.Get();
 
-			var socketSender = await Io.CreateSenderAsync("127.0.0.1", randomPort, SocketHandlerType.Udp);
+			var socketSender = await Io.CreateSenderAsync(IP, randomPort, SocketHandlerType.Udp);
 
-			var socketListener = Io.CreateListener("127.0.0.1", randomPort, SocketHandlerType.Udp);
+			var socketListener = Io.CreateListener(IP, randomPort, SocketHandlerType.Udp);
 
 			socketListener.On("connect", async () =>
 			{
@@ -134,11 +135,11 @@ namespace SocketIo.Core.Tests
 			socketSender.Close();
 			socketListener.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TestDualSocketUDP()
 		{
 			bool hit1 = false;
@@ -146,9 +147,9 @@ namespace SocketIo.Core.Tests
 
 			var randomPort = RandomPort.Get();
 
-			var socketSender = Io.CreateSender("127.0.0.1", randomPort, SocketHandlerType.Udp);
+			var socketSender = Io.CreateSender(IP, randomPort, SocketHandlerType.Udp);
 
-			var socketListener = Io.CreateListener("127.0.0.1", randomPort, SocketHandlerType.Udp);
+			var socketListener = Io.CreateListener(IP, randomPort, SocketHandlerType.Udp);
 
 			socketListener.On("connect", () =>
 			{
@@ -179,7 +180,7 @@ namespace SocketIo.Core.Tests
 			socketSender.Close();
 			socketListener.Close();
 
-			Assert.IsTrue(hit1 && hit2);
+			Assert.True(hit1 && hit2);
 
 		}
 	}
