@@ -1,7 +1,4 @@
-﻿//
-// https://github.com/Beffyman/SocketIo.Core
-//
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SocketIo;
 using SocketIo.SocketTypes;
 using System;
@@ -48,7 +45,6 @@ namespace SocketIo.Core.Console
             ReadLine();
 
             socket.Close();
-
         }
 
     }

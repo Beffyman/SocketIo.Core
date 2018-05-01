@@ -1,9 +1,9 @@
 <package>
 	<metadata>
 		<id>SocketIo.Core</id>
-		<version>3.0.0</version>
+		<version>4.0.0</version>
 		<title>SocketIo.Core</title>
-		<authors>Beffyman</authors>
+		<authors>Beffyman;JuanluElGuerre</authors>
 		<owners>Beffyman</owners>
 		<licenseUrl>https://github.com/Beffyman/SocketIo.Core/blob/master/LICENSE</licenseUrl>
 		<projectUrl>https://github.com/Beffyman/SocketIo.Core</projectUrl>
@@ -11,7 +11,7 @@
 		<description>
 			Abstraction of TCP/UDP sockets that writes like Socket.IO
 		</description>
-		<copyright>Copyright 2017</copyright>
+		<copyright>Copyright 2018</copyright>
 		<dependencies>
 			<dependency id="Newtonsoft.Json" version="10.0.3" />
 		</dependencies>

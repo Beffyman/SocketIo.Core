@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace SocketIo
 {
-	/// <summary>
-	/// Static class used to connect sockets
-	/// </summary>
-	public static class Io
+    /// <summary>
+    /// Static class used to connect sockets
+    /// </summary>
+    public static class Io
 	{
 		private const int DefaultTimeout = 3000;
 

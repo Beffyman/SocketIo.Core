@@ -12,7 +12,6 @@ namespace SocketIo
 		internal readonly Guid Id;
 		internal IPEndPoint CurrentSender { get; set; }
 
-
 		internal BaseEmitter(string @event)
 		{
 			Id = Guid.NewGuid();
@@ -33,7 +32,6 @@ namespace SocketIo
 	/// </summary>
 	public sealed class Emitter : BaseEmitter
 	{
-
 		internal Action Body { get; set; }
 
 		internal Emitter(string @event, Action body) : base(@event)
@@ -53,7 +51,6 @@ namespace SocketIo
 	/// <typeparam name="T"></typeparam>
 	public sealed class Emitter<T> : BaseEmitter
 	{
-
 		internal Action<T> Body { get; set; }
 
 		internal Emitter(string @event, Action<T> body) : base(@event)
@@ -66,5 +63,4 @@ namespace SocketIo
 			Body((T)Convert.ChangeType(arg, typeof(T)));
 		}
 	}
-
 }
